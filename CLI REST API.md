@@ -4,7 +4,7 @@
 
 #### Headers
 
-```json
+```text
 Content-Type: application/json
 ```
 
@@ -13,10 +13,11 @@ Content-Type: application/json
 ```json
 {
   "file_path": "/home/user1/file1.avi",
-  "strategy": "copy",  // Optional
-  "background": "true" // Optional
+  "strategy": "copy",
+  "background": "true"
 }
 ```
+where `strategy` and `background` fields are optional.
 
 #### Response
 
@@ -30,22 +31,24 @@ Content-Type: application/json
 
 #### CLI Command
 
-`save [--strategy-copy | --strategy-fragments | --strategy-fragment-copy] [-b] path`
+`./ddsctl --save [--strategy-copy | --strategy-fragment | --strategy-fragment-copy] [--background | -b] path`
 
-* `-b` `--background` - File will be saved asynchronously. User can check status of the operation with `status` command
-* `--strategy-copy`
-`--strategy-fragments`
-`--strategy-fragment-copy` - User can override the default strategy of the server.
+* `-b` `--background` - file will be saved asynchronously. User can check status of the operation with `status` command
+* `-sc` `--strategy-copy` - stored data is copied to all active nodes without fragmenting.
+* `-sf` `--strategy-fragment` - stored data is fragmented and distributed among active nodes.
+* `-sfc` `--strategy-fragment-copy` - stored data is fragmented and distributed among active nodes. Each fragment has recovery copy on another node.
+
+User can override the default strategy in DDS daemon configuration.
 
 ---
 
 ## `GET /list`
 
-Returns list of existing files and their uuid managed by distributed system.
+Returns list of existing files and their UUID managed by distributed system.
 
 #### Headers
 
-```json
+```text
 Content-Type: application/json
 ```
 
@@ -62,7 +65,7 @@ Content-Type: application/json
 
 ### CLI Command
 
-`list`
+`./ddsctl --list`
 
 ---
 
@@ -89,14 +92,14 @@ Content-Type: application/json
   "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
   "file_name": "file1.avi",
   "size": "213421412",
-  "strategy": "strategy-name",
-  ....................
+  "strategy": "strategy-copy"
 }
 ```
+Response fields are TBD.
 
 ### CLI Command
 
-`info uuid `
+`./ddsctl --info {UUID}`
 
 > We can support info by `fileName` and in case of duplication we show all available uuids
 
@@ -114,7 +117,7 @@ Content-Type: application/json
 
 ```json
 {
-  "uuid": "uuid"
+  "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998"
 }
 ```
 
@@ -129,7 +132,7 @@ Content-Type: application/json
 
 ### CLI Command
 
-`get [-p] [-b] uuid`
+`./ddsctl --get [-p] [-b] {UUID}`
 
 * `-b` `--background` - File will be loaded asynchronously. User can check status of the operation with `status` command
 * `-p` `--path` - Path to the directory where file will be stored.
@@ -150,7 +153,7 @@ Content-Type: application/json
 
 ```json
 {
-  "uuid": "uuid"
+  "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998"
 }
 ```
 
@@ -160,9 +163,9 @@ Status
 
 ### CLI Command
 
-`delete [-b] uuid`
+`./ddsctl --delete [-b] {UUID}`
 
-* `-b` `--background` - File will be loaded asynchronously. User can check status of the operation with `status` command
+* `-b` `--background` - File will be loaded asynchronously. User can check status of the operation with `status` command.
 
 > We can support get by `fileName` and in case of duplication we show all available uuids
 
@@ -191,17 +194,18 @@ Content-Type: application/json
 ```json
 {
   "local_file_path": "/home/new/path/file1.avi",
-  "file_name": "file1.avi"
+  "file_name": "file1.avi",
+  "progress": 31.5
 }
 ```
 
 ### CLI Command
 
-`status [-g] [-s] [-d] [-f] [-d] [-r]`
+`./ddsctl --status [-g] [-s] [-d] [-f] [-d] [-r]`
 
 * `-g` `--get` - Table will contain the status of `get` operations
 * `-s` `--save` - Table will contain the status of `save` operations
-* `-d` `--delete` - Table will contain the status of `delet` operations
+* `-d` `--delete` - Table will contain the status of `delete` operations
 
 * `-f` `--fail` - Table will contain failed processes
 * `-d` `--done` - Table will contain succeeded processes
