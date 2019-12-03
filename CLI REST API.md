@@ -183,19 +183,47 @@ Content-Type: application/json
 
 ```json
 {
-  "page_size": 10,                              // Optional
-  "by_status": ["done", "fail", "run"],         // Optional
-  "by_operation": ["delete", "save", "get"]     // Optional
+  "page_size": 10,                              
+  "by_status": ["done", "fail", "run"],        
+  "by_operation": ["delete", "save", "get"]     
 }
 ```
+where `page_size`, `by_status`, `by_operation` fields are optional.
 
 #### Response
 
 ```json
 {
-  "local_file_path": "/home/new/path/file1.avi",
-  "file_name": "file1.avi",
-  "progress": 31.5
+  "statuses": [
+    {
+      "file_name": "file1.avi",
+      "operation": "get",
+      "status": "run",
+      "progress": 31.5
+    },
+    {
+      "file_name": "file2.avi",
+      "operation": "delete",
+      "status": "run",
+      "progress": 20
+    },
+    {
+      "file_name": "file3.avi",
+      "operation": "save",
+      "status": "run",
+      "progress": 90.2
+    },
+    {
+      "file_name": "file4.avi",
+      "operation": "save",
+      "status": "fail"
+    },
+    {
+      "file_name": "file5.avi",
+      "operation": "delete",
+      "status": "done"
+    }
+  ]
 }
 ```
 
