@@ -17,7 +17,7 @@ Content-Type: application/json
   "background": "true"
 }
 ```
-where `strategy` and `background` fields are optional.
+where `strategy` and `background` fields are optional. The defaults are defined in DDS daemon configuration.
 
 #### Response
 
