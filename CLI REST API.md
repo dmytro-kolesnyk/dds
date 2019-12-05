@@ -1,6 +1,25 @@
 # CLI API
 
-## `POST /save`
+## Upload file
+
+### CLI Command
+
+`./ddsctl --upload [--strategy [copy | fragment | fragment-copy] [--background | -b] path`
+
+* `-b` `--background` - file will be saved asynchronously. User can check status of the operation with `status` command
+* --strategy:
+    - `copy` - stored data is copied to all active nodes without fragmenting.
+    - `fragment` - stored data is fragmented and distributed among active nodes.
+    - `fragment-copy` - stored data is fragmented and distributed among active nodes. Each fragment has recovery copy on another node.
+
+Aliases (???):
+* `-sc` - copy
+* `-sf` `- fragment
+* `-sfc` `- fragment-copy
+
+User can override the default strategy in DDS daemon configuration.
+
+### `POST /files/{UUID}`
 
 #### Headers
 
@@ -14,43 +33,39 @@ Content-Type: application/json
 {
   "file_path": "/home/user1/file1.avi",
   "strategy": "copy",
-  "background": "true"
+  "store_locally": true
 }
 ```
-where `strategy` and `background` fields are optional. The defaults are defined in DDS daemon configuration.
+The field "strategy":
+- copy
+- fragment
+- fragment-copy
+- default (if user doesn't set strategy explicitly)
 
 #### Response
 
 ```json
 {
-  "file_path": "/home/user1/file1.avi",
-  "file_name": "file1.avi",
-  "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998"
+  "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
+  "error": "Timeout to DDS daemon"
 }
 ```
 
-#### CLI Command
-
-`./ddsctl --save [--strategy-copy | --strategy-fragment | --strategy-fragment-copy] [--background | -b] path`
-
-* `-b` `--background` - file will be saved asynchronously. User can check status of the operation with `status` command
-* `-sc` `--strategy-copy` - stored data is copied to all active nodes without fragmenting.
-* `-sf` `--strategy-fragment` - stored data is fragmented and distributed among active nodes.
-* `-sfc` `--strategy-fragment-copy` - stored data is fragmented and distributed among active nodes. Each fragment has recovery copy on another node.
-
-User can override the default strategy in DDS daemon configuration.
-
 ---
 
-## `GET /list`
+## List files
+
+### CLI Command
+
+`./ddsctl --list`
+
+### `GET /files`
 
 Returns list of existing files and their UUID managed by distributed system.
 
 #### Headers
 
-```text
-Content-Type: application/json
-```
+Empty.
 
 #### Response
 
@@ -63,103 +78,39 @@ Content-Type: application/json
 }
 ```
 
-### CLI Command
-
-`./ddsctl --list`
-
 ---
 
-## `GET /info`
+## Download file
+
+### CLI Command
+
+`./ddsctl --download --path [-p] "/save/dir/path" [--background | -b] {UUID}`
+
+* `--path` `-p` - Path to the directory where file will be stored.
+* `--background` `-b` - File will be downloaded asynchronously.
+
+### `GET /files/{UUID}?dirpath=%2Fsave%2Fdir%2Fpath`
 
 #### Headers
 
-```
-Content-Type: application/json
-```
+Empty.
 
 #### Request
 
-```json
-{
-  "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998"
-}
-```
+No body.
 
 #### Response
 
 ```json
 {
   "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
-  "file_name": "file1.avi",
-  "size": "213421412",
-  "strategy": "strategy-copy"
+  "error": "Timeout to DDS daemon"
 }
 ```
-Response fields are TBD.
-
-### CLI Command
-
-`./ddsctl --info {UUID}`
-
-> We can support info by `fileName` and in case of duplication we show all available uuids
 
 ---
 
-## `POST /get`
-
-#### Headers
-
-```
-Content-Type: application/json
-```
-
-#### Request
-
-```json
-{
-  "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998"
-}
-```
-
-#### Response
-
-```json
-{
-  "local_file_path": "/home/new/path/file1.avi",
-  "file_name": "file1.avi"
-}
-```
-
-### CLI Command
-
-`./ddsctl --get [-p] [-b] {UUID}`
-
-* `-b` `--background` - File will be loaded asynchronously. User can check status of the operation with `status` command
-* `-p` `--path` - Path to the directory where file will be stored.
-
-> We can support get by `fileName` and in case of duplication we show all available uuids
-
----
-
-## `DELETE /delete`
-
-#### Headers
-
-```
-Content-Type: application/json
-```
-
-#### Request
-
-```json
-{
-  "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998"
-}
-```
-
-#### Response
-
-Status
+## Delete file
 
 ### CLI Command
 
@@ -167,28 +118,42 @@ Status
 
 * `-b` `--background` - File will be loaded asynchronously. User can check status of the operation with `status` command.
 
-> We can support get by `fileName` and in case of duplication we show all available uuids
-
----
-
-## `POST /status`
+### `DELETE /files/{UUID}`
 
 #### Headers
 
-```
-Content-Type: application/json
-```
+Empty.
 
 #### Request
 
+No body.
+
+#### Response
+
 ```json
 {
-  "page_size": 10,                              
-  "by_status": ["done", "fail", "run"],        
-  "by_operation": ["delete", "save", "get"]     
+  "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
+  "error": "Timeout to DDS daemon"
 }
 ```
-where `page_size`, `by_status`, `by_operation` fields are optional.
+
+---
+
+## Status of file
+
+### CLI Command
+
+`./ddsctl --status {UUID}`
+
+### `GET /files/{UUID}/status`
+
+#### Headers
+
+Empty.
+
+#### Request
+
+No body.
 
 #### Response
 
@@ -196,45 +161,17 @@ where `page_size`, `by_status`, `by_operation` fields are optional.
 {
   "statuses": [
     {
-      "file_name": "file1.avi",
-      "operation": "get",
-      "status": "run",
+      "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
+      "status": "download",
       "progress": 31.5
-    },
-    {
-      "file_name": "file2.avi",
-      "operation": "delete",
-      "status": "run",
-      "progress": 20
-    },
-    {
-      "file_name": "file3.avi",
-      "operation": "save",
-      "status": "run",
-      "progress": 90.2
-    },
-    {
-      "file_name": "file4.avi",
-      "operation": "save",
-      "status": "fail"
-    },
-    {
-      "file_name": "file5.avi",
-      "operation": "delete",
-      "status": "done"
     }
   ]
 }
 ```
 
-### CLI Command
+Status:
+* `upload`
+* `download`
+* `delete`
 
-`./ddsctl --status [-g] [-s] [-d] [-f] [-d] [-r]`
-
-* `-g` `--get` - Table will contain the status of `get` operations
-* `-s` `--save` - Table will contain the status of `save` operations
-* `-d` `--delete` - Table will contain the status of `delete` operations
-
-* `-f` `--fail` - Table will contain failed processes
-* `-d` `--done` - Table will contain succeeded processes
-* `-r` `--run` - Table will contain running processes
+Note: for fully uploaded/downloaded file `progress` will be 100%.
