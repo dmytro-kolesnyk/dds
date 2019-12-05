@@ -1,21 +1,27 @@
 package app
 
+import (
+	"log"
+)
+
 type App interface {
 	Start() error
 	Stop() error
 }
 
 type Daemon struct {
+}
 
+func NewDaemon() App {
+	return &Daemon{}
 }
 
 func (rcv *Daemon) Start() error {
-	panic("implement me")
+	log.Println("Started")
+	return nil
 }
 
 func (rcv *Daemon) Stop() error {
-	panic("implement me")
+	log.Println("Stopped")
+	return nil
 }
-
-
-
