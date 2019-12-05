@@ -1,23 +1,23 @@
-# CLI API
+# DDS Client-Daemon Interaction
 
-## Upload file
+## Uploading file
 
 ### CLI Command
 
-`./ddsctl --upload [--strategy [copy | fragment | fragment-copy] [--background | -b] path`
+`./ddsctl --upload [--strategy [copy | fragment | fragment-copy] [--background | -b] {PATH}`
 
-* `-b` `--background` - file will be saved asynchronously. User can check status of the operation with `status` command
-* --strategy:
-    - `copy` - stored data is copied to all active nodes without fragmenting.
-    - `fragment` - stored data is fragmented and distributed among active nodes.
-    - `fragment-copy` - stored data is fragmented and distributed among active nodes. Each fragment has recovery copy on another node.
+* `-b` `--background` - file will be saved asynchronously.
+* `--strategy` is optional and can be used together with values:
+  * `copy` - stored data is copied to all active nodes without fragmenting.
+  * `fragment` - stored data is fragmented and distributed among active nodes.
+  * `fragment-copy` - stored data is fragmented and distributed among active nodes. Each fragment has recovery copy on another node.
 
-Aliases (???):
-* `-sc` - copy
-* `-sf` `- fragment
-* `-sfc` `- fragment-copy
+Strategy aliases (???):
+* `-sc` - `copy`
+* `-sf` - `fragment`
+* `-sfc` - `fragment-copy`
 
-User can override the default strategy in DDS daemon configuration.
+Note: User can override the default strategy in DDS daemon configuration.
 
 ### `POST /files/{UUID}`
 
@@ -36,11 +36,11 @@ Content-Type: application/json
   "store_locally": true
 }
 ```
-The field "strategy":
-- copy
-- fragment
-- fragment-copy
-- default (if user doesn't set strategy explicitly)
+Possible `strategy` field values:
+* `copy`
+* `fragment`
+* `fragment-copy`
+* `default` - if user does not set saving strategy explicitly.
 
 #### Response
 
@@ -50,18 +50,19 @@ The field "strategy":
   "error": "Timeout to DDS daemon"
 }
 ```
+Note: Response body can have either `uuid` or `error` field.
 
 ---
 
-## List files
+## Getting list of files
 
 ### CLI Command
 
 `./ddsctl --list`
 
-### `GET /files`
+Returns a list of existing (ready to download) files and their UUID managed by distributed storage.
 
-Returns list of existing files and their UUID managed by distributed system.
+### `GET /files`
 
 #### Headers
 
@@ -80,11 +81,11 @@ Empty.
 
 ---
 
-## Download file
+## Downloading file
 
 ### CLI Command
 
-`./ddsctl --download --path [-p] "/save/dir/path" [--background | -b] {UUID}`
+`./ddsctl --download --path [-p] {PATH} [--background | -b] {UUID}`
 
 * `--path` `-p` - Path to the directory where file will be stored.
 * `--background` `-b` - File will be downloaded asynchronously.
@@ -110,7 +111,7 @@ No body.
 
 ---
 
-## Delete file
+## Deleting file
 
 ### CLI Command
 
@@ -139,7 +140,7 @@ No body.
 
 ---
 
-## Status of file
+## Getting status of file
 
 ### CLI Command
 
@@ -162,16 +163,18 @@ No body.
   "statuses": [
     {
       "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
-      "status": "download",
+      "status": "downloading",
       "progress": 31.5
     }
   ]
 }
 ```
 
-Status:
-* `upload`
-* `download`
-* `delete`
+Possible `status` field values:
+* `ready` - the file is saved in distributed storage and available for downloading.
+* `uploading` - the file is currently uploading.
+* `downloading` - the file is currently downloading.
+* `deleted` - the file is deleted from distributed storage.
 
-Note: for fully uploaded/downloaded file `progress` will be 100%.
+The `progress` shows the completion in percents.
+For example, for fully uploaded/downloaded file `progress` will be `100.0`.
