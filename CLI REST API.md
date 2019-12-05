@@ -160,7 +160,7 @@ No body.
 
 ```json
 {
-  "statuses": [
+  "status": [
     {
       "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
       "status": "downloading",
