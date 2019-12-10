@@ -1,5 +1,32 @@
 # DDS Client-Daemon Interaction
 
+## Getting list of files
+
+### CLI Command
+
+`./ddsctl --list`
+
+Returns a list of existing (ready to download) files and their UUID managed by distributed storage.
+
+### `GET /files`
+
+#### Headers
+
+Empty.
+
+#### Response
+
+```json
+{
+   "files": [{
+      "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
+      "file_name": "file1.avi"
+    }]
+}
+```
+
+---
+
 ## Uploading file
 
 ### CLI Command
@@ -19,7 +46,7 @@ Strategy aliases (???):
 
 Note: User can override the default strategy in DDS daemon configuration.
 
-### `POST /files/{UUID}`
+### `POST /files`
 
 #### Headers
 
@@ -51,33 +78,6 @@ Possible `strategy` field values:
 }
 ```
 Note: Response body can have either `uuid` or `error` field.
-
----
-
-## Getting list of files
-
-### CLI Command
-
-`./ddsctl --list`
-
-Returns a list of existing (ready to download) files and their UUID managed by distributed storage.
-
-### `GET /files`
-
-#### Headers
-
-Empty.
-
-#### Response
-
-```json
-{
-   "files": [{
-      "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
-      "file_name": "file1.avi"
-    }]
-}
-```
 
 ---
 
