@@ -1,5 +1,9 @@
 package main
 
-func main() {
+import (
+	"dds/cmd/cli/cmd"
+)
 
+func main() {
+	cmd.Execute()
 }
