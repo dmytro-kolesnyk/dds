@@ -1,8 +1,8 @@
 package listener
 
 import (
-	"dds/cmd/daemon/connection"
-	"dds/cmd/daemon/message"
+	"dds/connection"
+	"dds/message"
 	"encoding/gob"
 	"io"
 	"log"

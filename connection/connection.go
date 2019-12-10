@@ -2,7 +2,7 @@ package connection
 
 import (
 	"bufio"
-	"dds/cmd/daemon/message"
+	"dds/message"
 	"encoding/gob"
 	"net"
 	"strings"
