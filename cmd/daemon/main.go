@@ -1,9 +1,9 @@
 package main
 
 import (
-	"dds/cmd/daemon/connection"
-	"dds/cmd/daemon/listener"
-	"dds/cmd/daemon/message"
+	"dds/connection"
+	"dds/listener"
+	"dds/message"
 	"log"
 	"math/rand"
 	"net"
