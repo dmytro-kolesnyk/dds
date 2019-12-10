@@ -132,6 +132,10 @@ type Daemon struct {
 	C *Client
 }
 
+func NewDaemon() App {
+	return &Daemon{}
+}
+
 func (rcv *Daemon) startServer(port string) error {
 	rcv.S = NewServer()
 	if err := rcv.S.Listen(port); err != nil {
@@ -159,5 +163,6 @@ func (rcv *Daemon) Start() error {
 }
 
 func (rcv *Daemon) Stop() error {
-	panic("implement me")
+	log.Println("Stopped")
+	return nil
 }
