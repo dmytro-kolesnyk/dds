@@ -1,13 +1,14 @@
 package listener
 
 import (
-	"dds/connection"
-	"dds/message"
 	"encoding/gob"
 	"io"
 	"log"
 	"net"
 	"sync"
+
+	"github.com/dmytro-kolesnyk/dds/connection"
+	"github.com/dmytro-kolesnyk/dds/message"
 )
 
 type HandleFunc func(message.Message)

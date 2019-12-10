@@ -2,10 +2,11 @@ package connection
 
 import (
 	"bufio"
-	"dds/message"
 	"encoding/gob"
 	"net"
 	"strings"
+
+	"github.com/dmytro-kolesnyk/dds/message"
 )
 
 type Connection struct {

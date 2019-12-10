@@ -1,16 +1,16 @@
 package app
 
 import (
-	"dds/connection"
-	"dds/listener"
-	"dds/message"
 	"log"
 	"math/rand"
 	"net"
 	"os"
 	"time"
-)
 
+	"github.com/dmytro-kolesnyk/dds/connection"
+	"github.com/dmytro-kolesnyk/dds/listener"
+	"github.com/dmytro-kolesnyk/dds/message"
+)
 
 const (
 	Port = ":3541"
@@ -147,7 +147,6 @@ func (rcv *Daemon) startClient(addr string, port string) error {
 	}
 	return nil
 }
-
 
 func (rcv *Daemon) Start() error {
 	connect := os.Getenv("CONNECT")
