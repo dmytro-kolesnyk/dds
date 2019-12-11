@@ -11,4 +11,10 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# Jetbrains
 .idea
+
+# dep/mod
+vendor/*
+Gopkg.lock
+Gopkg.toml
