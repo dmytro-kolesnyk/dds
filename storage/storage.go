@@ -6,17 +6,17 @@ import (
 
 // Storage struct
 type Storage struct {
-	localStorage *localstorage.LocalStorage
+	lStorage *localstorage.LocalStorage
 }
 
 // NewStorage function
 func NewStorage() *Storage {
 	return &Storage{
-		localStorage: localstorage.NewLocalStorage(),
+		lStorage: localstorage.NewLocalStorage(),
 	}
 }
 
 // Start method
 func (rcv *Storage) Start() {
-	rcv.localStorage.Save()
+	rcv.lStorage.Save()
 }

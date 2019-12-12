@@ -16,6 +16,6 @@ func (rcv LocalStorage) Save() {
 }
 
 // NewLocalStorage method
-func (rcv LocalStorage) NewLocalStorage() *LocalStorage {
+func NewLocalStorage() *LocalStorage {
 	return &LocalStorage{}
 }
