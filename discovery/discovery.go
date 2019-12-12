@@ -54,7 +54,7 @@ func (rcv *Discovery) browse(neighbours chan *zeroconf.ServiceEntry) error {
 	return nil
 }
 
-func (rcv *Discovery) Start(nodes chan node.Node) error {
+func (rcv *Discovery) Start(nodes chan *node.Node) error {
 	if err := rcv.startServer(); err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (rcv *Discovery) Start(nodes chan node.Node) error {
 	go func() {
 		for n := range neighbours {
 			if n.Instance != rcv.Instance {
-				nodes <- node.Node{
+				nodes <- &node.Node{
 					Instance: n.Instance,
 					Addr:     n.AddrIPv4[0], // [TODO] [BUG] [FIXME]
 					Port:     n.Port,
