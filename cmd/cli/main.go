@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dds/cmd/cli/cmd"
+	"github.com/dmytro-kolesnyk/dds/cmd/cli/cmd"
 )
 
 func main() {
