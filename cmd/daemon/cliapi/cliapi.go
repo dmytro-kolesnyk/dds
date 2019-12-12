@@ -1,7 +1,7 @@
 package cliapi
 
 import (
-	"./handlers"
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi/handlers"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -9,7 +9,7 @@ import (
 type CliApi struct {
 }
 
-func (rcv *CliApi) start() error {
+func (rcv *CliApi) Listen() error {
 	router := mux.NewRouter()
 
 	router.Handle("/files", handlers.NewListHandler()).Methods(http.MethodGet)
@@ -18,6 +18,7 @@ func (rcv *CliApi) start() error {
 	router.Handle("/files/{uuid}", handlers.NewDeleteHandler()).Methods(http.MethodDelete)
 	router.Handle("/files/{uuid}/status", handlers.NewStatusHandler()).Methods(http.MethodGet)
 
+	// TODO: port must be configured
 	return http.ListenAndServe(":8080", router)
 }
 

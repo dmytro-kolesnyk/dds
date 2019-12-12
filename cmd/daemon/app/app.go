@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi"
 	"log"
 )
 
@@ -18,6 +19,12 @@ func NewDaemon() App {
 
 func (rcv *Daemon) Start() error {
 	log.Println("Started")
+
+	cliApi := cliapi.NewCliApi()
+	if err := cliApi.Listen(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
