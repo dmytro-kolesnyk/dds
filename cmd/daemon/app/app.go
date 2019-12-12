@@ -8,6 +8,7 @@ import (
 	"github.com/dmytro-kolesnyk/dds/discovery"
 	"github.com/dmytro-kolesnyk/dds/node"
 	"github.com/google/uuid"
+	"github.com/dmytro-kolesnyk/dds/storage"
 )
 
 type App interface {
@@ -16,10 +17,13 @@ type App interface {
 }
 
 type Daemon struct {
+	storage storage.Storage
 }
 
 func NewDaemon() App {
-	return &Daemon{}
+	return &Daemon{
+		storage: storage.NewStorage{},
+	}
 }
 
 func (rcv *Daemon) Start() error {
@@ -50,6 +54,7 @@ func (rcv *Daemon) Start() error {
 		return err
 	}
 
+	rcv.storage.Start()
 	return nil
 }
 
