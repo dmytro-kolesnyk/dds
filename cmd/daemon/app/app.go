@@ -39,13 +39,15 @@ func (rcv *Daemon) Start() error {
 
 	neighbours := make(chan *node.Node)
 	if err := discoverer.Start(neighbours); err != nil {
-		log.Fatalln(err)
+		//log.Fatalln(err)
+		return err
 	}
 	//defer discoverer.Stop()
 
 	cs := communicationServer.NewCommunicationServer()
 	if err := cs.Start(":3451", neighbours); err != nil {
-		log.Fatalln(err)
+		// log.Fatalln(err)
+		return err
 	}
 
 	return nil
