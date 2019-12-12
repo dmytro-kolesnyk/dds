@@ -17,12 +17,12 @@ type App interface {
 }
 
 type Daemon struct {
-	storage storage.Storage
+	storage *storage.Storage
 }
 
 func NewDaemon() App {
 	return &Daemon{
-		storage: storage.NewStorage{},
+		storage: storage.NewStorage(),
 	}
 }
 
