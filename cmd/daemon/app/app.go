@@ -3,6 +3,8 @@ package app
 import (
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi"
 	"log"
+
+	"github.com/dmytro-kolesnyk/dds/storage"
 )
 
 type App interface {
@@ -11,10 +13,13 @@ type App interface {
 }
 
 type Daemon struct {
+	storage storage.Storage
 }
 
 func NewDaemon() App {
-	return &Daemon{}
+	return &Daemon{
+		storage: storage.NewStorage{},
+	}
 }
 
 func (rcv *Daemon) Start() error {
@@ -25,6 +30,7 @@ func (rcv *Daemon) Start() error {
 		return err
 	}
 
+	rcv.storage.Start()
 	return nil
 }
 
