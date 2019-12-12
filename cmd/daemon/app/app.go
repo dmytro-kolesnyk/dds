@@ -1,8 +1,13 @@
 package app
 
 import (
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi"
 	"log"
+
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi"
+	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
+	"github.com/dmytro-kolesnyk/dds/discovery"
+	"github.com/dmytro-kolesnyk/dds/node"
+	"github.com/google/uuid"
 )
 
 type App interface {
@@ -23,6 +28,24 @@ func (rcv *Daemon) Start() error {
 	cliApi := cliapi.NewCliApi()
 	if err := cliApi.Listen(); err != nil {
 		return err
+	}
+
+	discoverer := discovery.NewDiscovery(
+		uuid.New().String(),
+		"_dds._tcp",
+		"local.",
+		3451,
+	)
+
+	neighbours := make(chan *node.Node)
+	if err := discoverer.Start(neighbours); err != nil {
+		log.Fatalln(err)
+	}
+	//defer discoverer.Stop()
+
+	cs := communicationServer.NewCommunicationServer()
+	if err := cs.Start(":3451", neighbours); err != nil {
+		log.Fatalln(err)
 	}
 
 	return nil
