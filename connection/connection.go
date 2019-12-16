@@ -36,12 +36,31 @@ func (rcv *Connection) Send(msg message.Message) error {
 	return nil
 }
 
+// [TODO] obsolete
 func (rcv *Connection) RecvMsgType() (string, error) {
 	cmd, err := rcv.rw.Reader.ReadString(message.Delim)
 	cmd = strings.Trim(cmd, string(message.Delim))
 	return cmd, err
 }
 
+// [TODO] obsolete
 func (rcv *Connection) Recv(msg message.Message) error {
 	return gob.NewDecoder(rcv.rw.Reader).Decode(msg)
+}
+
+func (rcv *Connection) RecvFull() (message.Message, error) {
+	msgType, err := rcv.rw.Reader.ReadString(message.Delim)
+	msgType = strings.Trim(msgType, string(message.Delim))
+
+	if err != nil {
+		return nil, err
+	}
+
+	msg := message.NewMessage(msgType)
+
+	if err := gob.NewDecoder(rcv.rw.Reader).Decode(msg); err != nil {
+		return nil, err
+	}
+
+	return msg, nil
 }
