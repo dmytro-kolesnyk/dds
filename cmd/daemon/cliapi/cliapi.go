@@ -1,12 +1,15 @@
 package cliapi
 
 import (
+	"fmt"
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi/handlers"
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
 type CliApi struct {
+	port int
 }
 
 func (rcv *CliApi) Listen() error {
@@ -18,10 +21,9 @@ func (rcv *CliApi) Listen() error {
 	router.Handle("/files/{uuid}", handlers.NewDeleteHandler()).Methods(http.MethodDelete)
 	router.Handle("/files/{uuid}/status", handlers.NewStatusHandler()).Methods(http.MethodGet)
 
-	// TODO: port must be configured
-	return http.ListenAndServe(":8080", router)
+	return http.ListenAndServe(fmt.Sprintf(":%d", rcv.port), router)
 }
 
-func NewCliApi() *CliApi {
-	return &CliApi{}
+func NewCliApi(config *models.Config) *CliApi {
+	return &CliApi{port: config.CliApi.Port}
 }

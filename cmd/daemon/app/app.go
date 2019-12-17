@@ -1,9 +1,10 @@
 package app
 
 import (
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi"
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf"
 	"log"
 
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi"
 	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
 	"github.com/dmytro-kolesnyk/dds/discovery"
 	"github.com/dmytro-kolesnyk/dds/node"
@@ -25,7 +26,13 @@ func NewDaemon() App {
 func (rcv *Daemon) Start() error {
 	log.Println("Started")
 
-	cliApi := cliapi.NewCliApi()
+	configResolver := conf.NewResolver()
+	config, err := configResolver.GetConfig()
+	if err != nil {
+		return err
+	}
+
+	cliApi := cliapi.NewCliApi(config)
 	if err := cliApi.Listen(); err != nil {
 		return err
 	}
