@@ -32,8 +32,7 @@ func (rcv *Daemon) Start() error {
 		return err
 	}
 
-	daemon := NewDaemon()
-	if err := daemon.Start(); err != nil {
+	if err := rcv.storage.Start(); err != nil {
 		return err
 	}
 

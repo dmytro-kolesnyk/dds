@@ -27,6 +27,8 @@ func (rcv *Storage) Start() error {
 	if err != nil {
 		return err
 	}
+
+	// [TODO] move this to "Storage" fields
 	cs := communicationServer.NewCommunicationServer(port)
 
 	if err := cs.Start(); err != nil {
