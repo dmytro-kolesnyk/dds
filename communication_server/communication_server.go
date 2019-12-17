@@ -1,36 +1,19 @@
 package communicationServer
 
 import (
+	"fmt"
 	"log"
-	"math/rand"
-	"net"
+	"sync"
 	"time"
 
-	"github.com/dmytro-kolesnyk/dds/connection"
 	"github.com/dmytro-kolesnyk/dds/listener"
-	"github.com/dmytro-kolesnyk/dds/message"
+
+	"github.com/dmytro-kolesnyk/dds/discovery"
 	"github.com/dmytro-kolesnyk/dds/node"
+	"github.com/google/uuid"
+
+	"github.com/dmytro-kolesnyk/dds/message"
 )
-
-const (
-	Port = ":3541" // [FIXME] take from config
-)
-
-type server struct {
-	*listener.Listener
-	Nodes []*node.Node
-}
-
-func newServer() *server {
-	l := listener.NewListener()
-
-	l.AddHandler(&message.Create{}, handleCreate)
-	l.AddHandler(&message.Read{}, handleRead)
-	l.AddHandler(&message.Update{}, handleUpdate)
-	l.AddHandler(&message.Delete{}, handleDelete)
-
-	return &server{l, nil}
-}
 
 func handleCreate(msg message.Message) {
 	data := msg.(*message.Create)
@@ -52,97 +35,75 @@ func handleDelete(msg message.Message) {
 	log.Printf("%#v\n", data)
 }
 
-type client struct{}
-
-func (rcv *client) Open(addr string, port string) (*connection.Connection, error) {
-	log.Println("connect to", addr, "...")
-	conn, err := net.Dial("tcp", addr+port)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return connection.NewConnection(conn), nil
-}
-
-func (rcv *client) Talk(addr string, port string) error {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	read := func() message.Message {
-		return &message.Read{
-			Id: 0xfeed_feed_0000_0000 | r.Uint64()%0xffff_ffff,
-		}
-	}()
-
-	create := func() message.Message {
-		bytes := make([]byte, r.Int()%0xff)
-		//bytes := make([]byte, 4096)
-		for i := 0; i < len(bytes); i++ {
-			bytes[i] = byte(r.Intn(0xff))
-		}
-		return &message.Create{
-			Id:    0xdefe_ca7e_0000_0000 | r.Uint64()%0xffff_ffff,
-			Bytes: bytes,
-		}
-	}()
-
-	update := func() message.Message {
-		bytes := make([]byte, r.Int()%0xff)
-		//bytes := make([]byte, 4096)
-		for i := 0; i < len(bytes); i++ {
-			bytes[i] = byte(r.Intn(0xff))
-		}
-		return &message.Update{
-			Filename: "updateFilename.file",
-			Id:       0xdefa_ce17_0000_0000 | r.Uint64()%0xffff_ffff,
-			Bytes:    bytes,
-		}
-	}()
-
-	del := func() message.Message {
-		return &message.Delete{
-			Filename: "deleteFilename.file",
-		}
-	}()
-
-	msgs := []message.Message{create, read, update, del}
-
-	s, err := rcv.Open(addr, port)
-	if err != nil {
-		return err
-	}
-
-	for {
-		msg := msgs[r.Int()%len(msgs)]
-		log.Printf("send %s message", msg.Type())
-		if err := s.Send(msg); err != nil {
-			return err
-		}
-		time.Sleep(time.Millisecond * time.Duration(100+r.Int()%2400))
-	}
-}
-
 type CommunicationServer struct {
-	*server
-	*client
+	listener   *listener.Listener
+	discoverer *discovery.Discovery
+	*neighbours
+	port int
 }
 
-func NewCommunicationServer() *CommunicationServer {
-	return &CommunicationServer{}
+func NewCommunicationServer(port int) *CommunicationServer {
+	return &CommunicationServer{
+		listener.NewListener(),
+		discovery.NewDiscovery(
+			uuid.New().String(),
+			"_dds._tcp",
+			"local.",
+			port,
+		),
+		&neighbours{make(map[string]*node.Node), sync.Mutex{}},
+		port,
+	}
 }
 
-func (rcv *CommunicationServer) Start(port string, neighbours chan *node.Node) error {
-	rcv.server = newServer()
-	if err := rcv.Listen(port); err != nil {
+func (rcv *CommunicationServer) Start() error {
+	neighbours := make(chan *node.Node)
+	if err := rcv.discoverer.Start(neighbours); err != nil {
 		return err
 	}
 
+	log.Println("looking for neighbours")
 	go func() {
 		for n := range neighbours {
-			rcv.Nodes = append(rcv.Nodes, n)
+			rcv.mux.Lock()
+			if _, ok := rcv.nodes[n.Instance]; !ok {
+				rcv.nodes[n.Instance] = n
+			}
+			rcv.mux.Unlock()
+			if err := rcv.neighbours.Connect(n.Instance); err != nil {
+				log.Println(err)
+			}
+			log.Printf("new neighbour: %#+v\n", n)
+		}
+		log.Println("DISCOVERY STOPPED")
+	}()
+
+	// [TODO] Mock goroutine
+	go func() {
+		for {
+			for _, n := range rcv.nodes {
+				log.Println("neighbour:", n.Instance, n.Addr, n.Port)
+				if err := n.Talk(); err != nil {
+					log.Println(err)
+				}
+			}
+			time.Sleep(1 * time.Second)
 		}
 	}()
 
+	rcv.listener.AddHandler(&message.Create{}, handleCreate)
+	rcv.listener.AddHandler(&message.Read{}, handleRead)
+	rcv.listener.AddHandler(&message.Update{}, handleUpdate)
+	rcv.listener.AddHandler(&message.Delete{}, handleDelete)
+
+	if err := rcv.listener.Listen(fmt.Sprintf(":%d", rcv.port)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (rcv *CommunicationServer) Stop() error {
 	return nil
 }
 

@@ -2,12 +2,10 @@ package listener
 
 import (
 	"encoding/gob"
-	"io"
 	"log"
 	"net"
 	"sync"
 
-	"github.com/dmytro-kolesnyk/dds/connection"
 	"github.com/dmytro-kolesnyk/dds/message"
 )
 
@@ -55,8 +53,6 @@ func (rcv *Listener) Listen(port string) error {
 }
 
 func (rcv *Listener) handle(conn net.Conn) {
-	s := connection.NewConnection(conn)
-
 	defer func() {
 		if err := conn.Close(); err != nil {
 			log.Println(err)
@@ -64,31 +60,25 @@ func (rcv *Listener) handle(conn net.Conn) {
 	}()
 
 	for {
-		cmd, err := s.RecvMsgType()
+		msg, err := message.Recv(conn)
 
 		if err != nil {
 			log.Printf("%s disconnected, %s\n", conn.RemoteAddr(), err)
-			if err == io.EOF {
-				return
-			}
+			//if err == io.EOF {
+			return
+			//}
 		}
 
 		rcv.mux.RLock()
-		handler, ok := rcv.handler[cmd]
+		handler, ok := rcv.handler[msg.Type()]
 		rcv.mux.RUnlock()
 
 		if !ok {
-			log.Printf("handler for message:'%s' is not registered\n", cmd)
+			log.Printf("handler for message:'%s' is not registered\n", msg.Type())
 			continue
 		}
 
-		log.Printf("received command: (%s) from %s\n", cmd, conn.RemoteAddr())
-
-		msg := message.NewMessage(cmd)
-		if err := s.Recv(msg); err != nil {
-			log.Println(err)
-			continue
-		}
+		log.Printf("received command: '%s' from %s\n", msg.Type(), conn.RemoteAddr())
 
 		handler(msg)
 	}
