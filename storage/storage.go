@@ -1,6 +1,11 @@
 package storage
 
 import (
+	"log"
+	"os"
+	"strconv"
+
+	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
 	"github.com/dmytro-kolesnyk/dds/localstorage"
 )
 
@@ -17,6 +22,17 @@ func NewStorage() *Storage {
 }
 
 // Start method
-func (rcv *Storage) Start() {
-	rcv.lStorage.Save()
+func (rcv *Storage) Start() error {
+	port, err := strconv.Atoi(os.Getenv("PORT")) // [FIXME] read from config.yaml
+	if err != nil {
+		return err
+	}
+	cs := communicationServer.NewCommunicationServer(port)
+
+	if err := cs.Start(); err != nil {
+		log.Println("searching for neighbors")
+		return err
+	}
+
+	return nil
 }
