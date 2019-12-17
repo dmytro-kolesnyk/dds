@@ -29,14 +29,13 @@ func (rcv *Daemon) Start() error {
 	//}
 
 	//defer discoverer.Stop()
-
-	cs := communicationServer.NewCommunicationServer()
 	port, err := strconv.Atoi(os.Getenv("PORT"))
 	if err != nil {
 		return err
 	}
+	cs := communicationServer.NewCommunicationServer(port)
 
-	if err := cs.Start(port); err != nil {
+	if err := cs.Start(); err != nil {
 		log.Println("searching for neighbors")
 		// log.Fatalln(err)
 		return err

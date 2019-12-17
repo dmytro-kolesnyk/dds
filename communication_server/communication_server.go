@@ -3,6 +3,7 @@ package communicationServer
 import (
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/dmytro-kolesnyk/dds/listener"
@@ -50,7 +51,7 @@ func NewCommunicationServer(port int) *CommunicationServer {
 			"local.",
 			port,
 		),
-		&neighbours{},
+		&neighbours{make(map[string]*node.Node), sync.Mutex{}},
 		port,
 	}
 }
@@ -82,9 +83,9 @@ func (rcv *CommunicationServer) Start() error {
 		for {
 			for _, n := range rcv.nodes {
 				log.Println("neighbour:", n.Instance, n.Addr, n.Port)
-				//if err := rcv.Talk(n); err != nil {
-				//	log.Println(err)
-				//}
+				if err := n.Talk(); err != nil {
+					log.Println(err)
+				}
 			}
 			time.Sleep(1 * time.Second)
 		}

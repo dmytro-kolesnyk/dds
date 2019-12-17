@@ -16,6 +16,5 @@
 *.iml
 
 # dep
-Gopkg.toml
 Gopkg.lock
 vendor/**
