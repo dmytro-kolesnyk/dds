@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
+	"github.com/dmytro-kolesnyk/dds/storage"
 )
 
 type App interface {
@@ -14,21 +15,31 @@ type App interface {
 }
 
 type Daemon struct {
+	storage *storage.Storage
 }
 
 func NewDaemon() App {
-	return &Daemon{}
+	return &Daemon{
+		storage: storage.NewStorage(),
+	}
 }
 
 func (rcv *Daemon) Start() error {
 	log.Println("Started")
 
-	//cliApi := cliapi.NewCliApi()
-	//if err := cliApi.Listen(); err != nil {
-	//	return err
-	//}
+	/*
+		configResolver := conf.NewResolver()
+		config, err := configResolver.GetConfig()
+		if err != nil {
+			return err
+		}
 
-	//defer discoverer.Stop()
+		cliApi := cliapi.NewCliApi(config)
+		if err := cliApi.Listen(); err != nil {
+			return err
+		}
+	*/
+
 	port, err := strconv.Atoi(os.Getenv("PORT"))
 	if err != nil {
 		return err
@@ -37,7 +48,6 @@ func (rcv *Daemon) Start() error {
 
 	if err := cs.Start(); err != nil {
 		log.Println("searching for neighbors")
-		// log.Fatalln(err)
 		return err
 	}
 
