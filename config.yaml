@@ -1,2 +1,4 @@
 cliapi:
   port: 8081
+storage:
+  local-storage-path: /var/tmp/dds
