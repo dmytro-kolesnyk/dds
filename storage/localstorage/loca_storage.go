@@ -31,7 +31,7 @@ func (rcv LocalStorage) Save(chunk storage.Chunk) {
 		fmt.Println(`failed gob Encode`, err)
 	}
 
-	fileio.Write(chunk.Data, rcv.lStoragePath)
+	fileio.Write(b.Bytes(), rcv.lStoragePath)
 
 	// someUsefulInfo := fileio.Write(chunk.Data, rcv.path)
 	// Populate table with someUsefulInfo + uuid-id-filename

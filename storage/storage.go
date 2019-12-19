@@ -31,9 +31,9 @@ func NewStorage(config *models.Config) *Storage {
 
 // Method used when current node have to distribute file
 func (rcv *Storage) Save(data []byte, filename string, strategy string, offset int) {
-	chanks := rcv.splitter.Split(data, filename, strategy, offset)
+	chunks := rcv.splitter.Split(data, filename, strategy, offset)
 
-	for _, c := range chanks {
+	for _, c := range chunks {
 		rcv.saveChunk(c)
 	}
 	//TODO add logic

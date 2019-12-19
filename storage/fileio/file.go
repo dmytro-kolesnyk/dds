@@ -28,7 +28,7 @@ func Write(data []byte, path string) int {
 	// Open a new file for writing only
 	file, err := os.OpenFile(
 		path,
-		os.O_WRONLY|os.O_TRUNC|os.O_CREATE,
+		os.O_WRONLY|os.O_CREATE|os.O_APPEND,
 		0666,
 	)
 	check(err)
