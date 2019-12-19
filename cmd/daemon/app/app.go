@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi"
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf"
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
 	"log"
 
 	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
@@ -18,22 +18,21 @@ type App interface {
 }
 
 type Daemon struct {
+	storage *storage.Storage
+	cliApi  *cliapi.CliApi
 }
 
-func NewDaemon() App {
+func NewDaemon(config *models.Config) App {
+	return &Daemon{
+		storage: storage.NewStorage(config),
+		cliApi:  cliapi.NewCliApi(config),
+	}
 }
 
 func (rcv *Daemon) Start() error {
 	log.Println("Started")
 
-	configResolver := conf.NewResolver()
-	config, err := configResolver.GetConfig()
-	if err != nil {
-		return err
-	}
-
-	cliApi := cliapi.NewCliApi(config)
-	if err := cliApi.Listen(); err != nil {
+	if err := rcv.cliApi.Listen(); err != nil {
 		return err
 	}
 
@@ -56,8 +55,6 @@ func (rcv *Daemon) Start() error {
 		// log.Fatalln(err)
 		return err
 	}
-
-	storage.NewStorage(config)
 	return nil
 }
 

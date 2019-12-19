@@ -1,7 +1,7 @@
 package fileio
 
 import (
-	"fmt"
+	"log"
 	"os"
 )
 
@@ -24,11 +24,21 @@ func Read(file string, offset int, lenght int) []byte {
 }
 
 // Write function
-func Write(data []byte, file string) int {
-	f, err := os.Open(file)
+func Write(data []byte, path string) int {
+	// Open a new file for writing only
+	file, err := os.OpenFile(
+		path,
+		os.O_WRONLY|os.O_TRUNC|os.O_CREATE,
+		0666,
+	)
 	check(err)
+	defer file.Close()
 	// do stuff
-	fmt.Println(data)
-	f.Close()
-	return 0
+
+	bytesWritten, err := file.Write(data)
+	check(err)
+
+	//
+	log.Printf("Wrote %d bytes. into path %s\n", bytesWritten, path)
+	return bytesWritten
 }

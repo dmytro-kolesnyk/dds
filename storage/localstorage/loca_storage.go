@@ -1,24 +1,38 @@
 package localstorage
 
 import (
+	"bytes"
+	"encoding/gob"
+	"fmt"
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
 	"github.com/dmytro-kolesnyk/dds/storage/fileio"
 	"github.com/dmytro-kolesnyk/dds/storage/splitter"
 )
 
 // LocalStorage contains actual data
 type LocalStorage struct {
+	lStoragePath string
 	// Some Table to keep track of storedData
 }
 
 // NewLocalStorage method
-func NewLocalStorage() *LocalStorage {
-	return &LocalStorage{}
+func NewLocalStorage(config *models.Config) *LocalStorage {
+	return &LocalStorage{
+		lStoragePath: config.Storage.LocalStoragePath,
+	}
 }
 
-// SplitSave method
+// Save method
 func (rcv LocalStorage) Save(chunk storage.Chunk) {
-	// Probably we can use information from Chunk to store it more efficiently (uuid-id-filename table with offsets to search)
-	fileio.Write(chunk.Data, rcv.path)
-	//someUsefulInfo := fileio.Write(chunk.Data, rcv.path)
+	b := bytes.Buffer{}
+	encoder := gob.NewEncoder(&b)
+	err := encoder.Encode(chunk)
+	if err != nil {
+		fmt.Println(`failed gob Encode`, err)
+	}
+
+	fileio.Write(chunk.Data, rcv.lStoragePath)
+
+	// someUsefulInfo := fileio.Write(chunk.Data, rcv.path)
 	// Populate table with someUsefulInfo + uuid-id-filename
 }

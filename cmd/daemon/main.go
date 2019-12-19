@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf"
 	"log"
 	"os"
 	"os/signal"
@@ -15,7 +16,14 @@ func main() {
 
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	app := app.NewDaemon()
+	configResolver := conf.NewResolver()
+	config, err := configResolver.GetConfig()
+	if err != nil {
+		log.Println("Please specify the config config.yaml")
+		return
+	}
+
+	app := app.NewDaemon(config)
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
 	}

@@ -9,5 +9,6 @@ type Config struct {
 		LocalStoragePath string `yaml:"local-storage-path",envconfig:"LOCAL_STORAGE_PATH"`
 		DefaultStrategy  string `yaml:"strategy"`
 		StoreLocal       bool   `yaml:"store-local"`
+		Offset           int    `yaml:"offset"`
 	} `yaml:"storage"`
 }
