@@ -31,7 +31,7 @@ func (rcv *Listener) AddHandler(m message.Message, f HandleFunc) {
 	rcv.mux.Unlock()
 }
 
-func (rcv *Listener) Listen(port string) error {
+func (rcv *Listener) Start(port string) error {
 	var err error
 
 	if rcv.listener, err = net.Listen("tcp", port); err != nil {
@@ -50,6 +50,10 @@ func (rcv *Listener) Listen(port string) error {
 		log.Println("connected from", conn.RemoteAddr())
 		go rcv.handle(conn)
 	}
+}
+
+func (rcv *Listener) Stop() error {
+	return rcv.listener.Close()
 }
 
 func (rcv *Listener) handle(conn net.Conn) {
@@ -78,7 +82,7 @@ func (rcv *Listener) handle(conn net.Conn) {
 			continue
 		}
 
-		log.Printf("received command: '%s' from %s\n", msg.Type(), conn.RemoteAddr())
+		//log.Printf("received command: '%s' from %s\n", msg.Type(), conn.RemoteAddr())
 
 		handler(msg)
 	}

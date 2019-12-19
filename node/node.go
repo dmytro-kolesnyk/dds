@@ -18,8 +18,14 @@ type Node struct {
 }
 
 func (rcv *Node) Connect() (err error) {
-	log.Println("connecting to", rcv.Addr)
-	rcv.Conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", rcv.Addr, rcv.Port))
+	log.Printf("connecting to %s:%d\n", rcv.Addr, rcv.Port)
+	if rcv.Conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", rcv.Addr, rcv.Port)); err != nil {
+		return err
+	}
+
+	if err = rcv.Conn.(*net.TCPConn).SetKeepAlive(true); err != nil {
+		return err
+	}
 
 	return
 }
@@ -79,7 +85,7 @@ func (rcv *Node) Talk() error {
 
 	for {
 		msg := messages[r.Int()%len(messages)]
-		log.Printf("send %s message to %s:%d\n", msg.Type(), rcv.Addr, rcv.Port)
+		//log.Printf("send %s message to %s:%d\n", msg.Type(), rcv.Addr, rcv.Port)
 		if err := rcv.Send(msg); err != nil {
 			return err
 		}
