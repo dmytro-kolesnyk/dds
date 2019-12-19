@@ -1,10 +1,9 @@
 package app
 
 import (
-	"log"
-
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi"
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf"
+	"github.com/dmytro-kolesnyk/dds/common/logger"
 	"github.com/dmytro-kolesnyk/dds/storage"
 )
 
@@ -15,16 +14,18 @@ type App interface {
 
 type Daemon struct {
 	storage *storage.Storage
+	logger  *logger.Logger
 }
 
 func NewDaemon() App {
 	return &Daemon{
 		storage: storage.NewStorage(),
+		logger:  logger.NewLogger(Daemon{}),
 	}
 }
 
 func (rcv *Daemon) Start() error {
-	log.Println("Started")
+	rcv.logger.Info("Started")
 
 	configResolver := conf.NewResolver()
 	config, err := configResolver.GetConfig()
@@ -45,6 +46,7 @@ func (rcv *Daemon) Start() error {
 }
 
 func (rcv *Daemon) Stop() error {
-	log.Println("Stopped")
+	rcv.logger.Info("Stopped")
+
 	return nil
 }

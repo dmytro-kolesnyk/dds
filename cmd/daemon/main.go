@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -24,9 +23,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("awaiting signal")
+	logger.Info("awaiting signal")
 	<-sigs
-	fmt.Println("exiting")
+	logger.Info("exiting")
 
 	if err := app.Stop(); err != nil {
 		log.Fatal(err)
