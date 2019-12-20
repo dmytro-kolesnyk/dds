@@ -1,9 +1,8 @@
 package main
 
-import (
-	"github.com/dmytro-kolesnyk/dds/cmd/cli/cmd"
-)
+import "github.com/dmytro-kolesnyk/dds/cmd/cli/app"
 
 func main() {
-	cmd.Execute()
+	cliApp := app.NewApp("localhost", "8081")
+	cliApp.Start()
 }
