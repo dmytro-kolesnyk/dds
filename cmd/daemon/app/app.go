@@ -32,12 +32,10 @@ func (rcv *Daemon) Start() error {
 		return err
 	}
 
-	if err := rcv.storage.Start(); err != nil {
-		return err
-	}
-
 	cliApi := cliapi.NewCliApi(config)
-	if err := cliApi.Listen(); err != nil {
+	cliApi.Listen()
+
+	if err := rcv.storage.Start(); err != nil {
 		return err
 	}
 
