@@ -30,6 +30,24 @@ func (rcv *Node) Connect() (err error) {
 	return
 }
 
+func (rcv *Node) Start() error {
+	return nil
+}
+
+/*
+func PingPong() error {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	ping := &message.Ping{
+		Xid: r.Uint32() % 0x0fff_ffff,
+	}
+
+	go func() {
+
+	}()
+	return nil
+}
+*/
+
 func (rcv *Node) Send(msg message.Message) error {
 	return message.Send(msg, rcv.Conn)
 }
@@ -43,52 +61,86 @@ func (rcv *Node) Recv() (message.Message, error) {
 //
 func (rcv *Node) Talk() error {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	read := func() message.Message {
-		return &message.Read{
-			Id: 0xfeed_feed_0000_0000 | r.Uint64()%0xffff_ffff,
+	ping := func() message.Message {
+		return &message.Ping{
+			Xid: r.Uint32() % 0x0fff_ffff,
 		}
-	}()
+	}
+	/*
+		read := func() message.Message {
+			return &message.Read{
+				Id: 0xfeed_feed_0000_0000 | r.Uint64()%0xffff_ffff,
+			}
+		}()
 
-	create := func() message.Message {
-		bytes := make([]byte, r.Int()%0xff)
-		//bytes := make([]byte, 4096)
-		for i := 0; i < len(bytes); i++ {
-			bytes[i] = byte(r.Intn(0xff))
-		}
-		return &message.Create{
-			Id:    0xdefe_ca7e_0000_0000 | r.Uint64()%0xffff_ffff,
-			Bytes: bytes,
-		}
-	}()
+		create := func() message.Message {
+			bytes := make([]byte, r.Int()%0xff)
+			//bytes := make([]byte, 4096)
+			for i := 0; i < len(bytes); i++ {
+				bytes[i] = byte(r.Intn(0xff))
+			}
+			return &message.Create{
+				Id:    0xdefe_ca7e_0000_0000 | r.Uint64()%0xffff_ffff,
+				Bytes: bytes,
+			}
+		}()
 
-	update := func() message.Message {
-		bytes := make([]byte, r.Int()%0xff)
-		//bytes := make([]byte, 4096)
-		for i := 0; i < len(bytes); i++ {
-			bytes[i] = byte(r.Intn(0xff))
-		}
-		return &message.Update{
-			Filename: "updateFilename.file",
-			Id:       0xdefa_ce17_0000_0000 | r.Uint64()%0xffff_ffff,
-			Bytes:    bytes,
-		}
-	}()
+		update := func() message.Message {
+			bytes := make([]byte, r.Int()%0xff)
+			//bytes := make([]byte, 4096)
+			for i := 0; i < len(bytes); i++ {
+				bytes[i] = byte(r.Intn(0xff))
+			}
+			return &message.Update{
+				Filename: "updateFilename.file",
+				Id:       0xdefa_ce17_0000_0000 | r.Uint64()%0xffff_ffff,
+				Bytes:    bytes,
+			}
+		}()
 
-	del := func() message.Message {
-		return &message.Delete{
-			Filename: "deleteFilename.file",
+		del := func() message.Message {
+			return &message.Delete{
+				Filename: "deleteFilename.file",
+			}
+		}()
+
+		messages := []message.Message{create, read, update, del}
+
+		for {
+			msg := messages[r.Int()%len(messages)]
+			//log.Printf("send %s message to %s:%d\n", msg.Type(), rcv.Addr, rcv.Port)
+			if err := rcv.Send(msg); err != nil {
+				return err
+			}
+			time.Sleep(time.Millisecond * time.Duration(100+r.Int()%2400))
 		}
-	}()
 
-	messages := []message.Message{create, read, update, del}
-
+	*/
+	//go func() {
 	for {
-		msg := messages[r.Int()%len(messages)]
-		//log.Printf("send %s message to %s:%d\n", msg.Type(), rcv.Addr, rcv.Port)
-		if err := rcv.Send(msg); err != nil {
+		request := ping()
+
+		if err := rcv.Send(request); err != nil {
+			log.Printf("error during sending '%s' request: %s\n", request.Type(), err)
 			return err
 		}
-		time.Sleep(time.Millisecond * time.Duration(100+r.Int()%2400))
+
+		log.Printf(
+			"ping (xid: %d) sent to %s\n",
+			request.(*message.Ping).Xid,
+			rcv.Conn.RemoteAddr(),
+		)
+
+		if response, err := rcv.Recv(); err != nil {
+			log.Printf("error during sending '%s' request: %s\n", request.Type(), err)
+			return err
+		} else {
+			if response.(*message.Pong).Xid != request.(*message.Ping).Xid+1 {
+				return fmt.Errorf("invalid Pong answer")
+			}
+		}
+
+		//time.Sleep(time.Millisecond * time.Duration(100+r.Int()%2400))
+		time.Sleep(time.Second * 5)
 	}
 }

@@ -15,24 +15,37 @@ import (
 	"github.com/dmytro-kolesnyk/dds/message"
 )
 
-func handleCreate(msg message.Message) {
+func handleCreate(req message.Message) message.Message {
 	//data := msg.(*message.Create)
 	//log.Printf("%#v\n", data)
+	return nil
 }
 
-func handleRead(msg message.Message) {
+func handleRead(req message.Message) message.Message {
 	//data := msg.(*message.Read)
 	//log.Printf("%#v\n", data)
+	return nil
 }
 
-func handleUpdate(msg message.Message) {
+func handleUpdate(req message.Message) message.Message {
 	//data := msg.(*message.Update)
 	//log.Printf("%#v\n", data)
+	return nil
 }
 
-func handleDelete(msg message.Message) {
+func handleDelete(req message.Message) message.Message {
 	//data := msg.(*message.Delete)
 	//log.Printf("%#v\n", data)
+	return nil
+}
+
+func handlePing(req message.Message) message.Message {
+	ping := req.(*message.Ping)
+	time.Sleep(5 * time.Nanosecond)
+	log.Printf("pong (xid: %d) for ping (xid: %d)\n", ping.Xid+1, ping.Xid)
+	return &message.Pong{
+		Xid: ping.Xid + 1,
+	}
 }
 
 type CommunicationServer struct {
@@ -40,7 +53,6 @@ type CommunicationServer struct {
 	discoverer *discovery.Discovery
 	nodes      sync.Map
 	port       int
-	//nodes      map[string]*node.Node
 }
 
 func NewCommunicationServer(port int) *CommunicationServer {
@@ -106,6 +118,7 @@ func (rcv *CommunicationServer) Start() error {
 	rcv.listener.AddHandler(&message.Read{}, handleRead)
 	rcv.listener.AddHandler(&message.Update{}, handleUpdate)
 	rcv.listener.AddHandler(&message.Delete{}, handleDelete)
+	rcv.listener.AddHandler(&message.Ping{}, handlePing)
 
 	if err := rcv.listener.Start(fmt.Sprintf(":%d", rcv.port)); err != nil {
 		return err

@@ -9,7 +9,7 @@ import (
 	"github.com/dmytro-kolesnyk/dds/message"
 )
 
-type HandleFunc func(message.Message)
+type HandleFunc func(message.Message) message.Message
 
 type Listener struct {
 	listener net.Listener
@@ -64,7 +64,7 @@ func (rcv *Listener) handle(conn net.Conn) {
 	}()
 
 	for {
-		msg, err := message.Recv(conn)
+		request, err := message.Recv(conn)
 
 		if err != nil {
 			log.Printf("%s disconnected, %s\n", conn.RemoteAddr(), err)
@@ -74,16 +74,20 @@ func (rcv *Listener) handle(conn net.Conn) {
 		}
 
 		rcv.mux.RLock()
-		handler, ok := rcv.handler[msg.Type()]
+		handler, ok := rcv.handler[request.Type()]
 		rcv.mux.RUnlock()
 
 		if !ok {
-			log.Printf("handler for message:'%s' is not registered\n", msg.Type())
+			log.Printf("handler for message:'%s' is not registered\n", request.Type())
 			continue
 		}
 
-		//log.Printf("received command: '%s' from %s\n", msg.Type(), conn.RemoteAddr())
-
-		handler(msg)
+		log.Printf("request '%s' from %s received\n", request.Type(), conn.RemoteAddr())
+		response := handler(request)
+		if response != nil {
+			if err := message.Send(response, conn); err != nil {
+				log.Println("error during response:", err)
+			}
+		}
 	}
 }
