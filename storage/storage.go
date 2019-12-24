@@ -10,8 +10,7 @@ import (
 
 // Storage struct
 type Storage struct {
-	splitter *storage.Splitter
-	// AllNodes []  // Probably need to be updatable (health check)
+	splitter     *storage.Splitter
 	offset       int
 	lStorage     *localstorage.LocalStorage
 	cServer      *communicationServer.CommunicationServer

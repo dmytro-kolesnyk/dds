@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf"
 	"log"
 	"os"

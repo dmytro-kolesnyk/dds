@@ -3,15 +3,8 @@ package app
 import (
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi"
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
-	"log"
-
-	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
-	"github.com/dmytro-kolesnyk/dds/discovery"
-	"github.com/dmytro-kolesnyk/dds/node"
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf"
 	"github.com/dmytro-kolesnyk/dds/common/logger"
 	"github.com/dmytro-kolesnyk/dds/storage"
-	"github.com/google/uuid"
 )
 
 type App interface {
@@ -36,10 +29,7 @@ func NewDaemon(config *models.Config) App {
 func (rcv *Daemon) Start() error {
 	rcv.logger.Info("Started")
 
-	if err := rcv.cliApi.Listen(); err != nil {
-		return err
-	}
-
+	rcv.cliApi.Listen()
 	if err := rcv.storage.Start(); err != nil {
 		return err
 	}

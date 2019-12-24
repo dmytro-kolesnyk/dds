@@ -16,6 +16,20 @@ type LocalStorage struct {
 	// Some Table to keep track of storedData
 }
 
+type TrackTable struct {
+}
+
+// TODO Can add useful methods for get missing chunks
+type LocalFile struct {
+	name         string
+	storedChunks []storedChunk
+}
+
+type storedChunk struct {
+	chunk  storage.Chunk
+	offset int
+}
+
 // NewLocalStorage method
 func NewLocalStorage(config *models.Config) *LocalStorage {
 	return &LocalStorage{

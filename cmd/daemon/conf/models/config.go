@@ -12,6 +12,6 @@ type Config struct {
 		Offset           int    `yaml:"offset"`
 	} `yaml:"storage"`
 	CommunicationServer struct {
-		Port int `yaml:"node-port"`
-	}
+		Port int `yaml:"target-port"`
+	} `yaml:"communication-server"`
 }
