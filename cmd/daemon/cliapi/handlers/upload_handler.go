@@ -4,13 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	strategy "github.com/dmytro-kolesnyk/dds/cmd/daemon/app/models"
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi/models"
+	cliApiModels "github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi/models"
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/controller"
+	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 	"io/ioutil"
 	"net/http"
 )
 
 type UploadHandler struct {
 	http.Handler
+	config     *models.Config
+	controller *controller.Controller
 }
 
 func (rcv *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +26,7 @@ func (rcv *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request := &models.UploadRequest{}
+	request := &cliApiModels.UploadRequest{}
 	if err := json.Unmarshal(body, &request); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -33,9 +37,13 @@ func (rcv *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: get real data
-	response := &models.UploadResponse{
-		Uuid: "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
+	uuid, err := rcv.controller.Save(request.FilePath, request.Strategy, request.StoreLocally)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError) // TODO: distinct user vs server errors
+		return
+	}
+	response := &cliApiModels.UploadResponse{
+		Uuid: uuid,
 	}
 
 	jsonResponse, err := json.Marshal(response)
@@ -47,7 +55,7 @@ func (rcv *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (rcv *UploadHandler) Validate(request *models.UploadRequest) error {
+func (rcv *UploadHandler) Validate(request *cliApiModels.UploadRequest) error {
 	if request.FilePath == "" {
 		return fmt.Errorf("invalid file path: %v", request.FilePath)
 	}
@@ -57,6 +65,6 @@ func (rcv *UploadHandler) Validate(request *models.UploadRequest) error {
 	return nil
 }
 
-func NewUploadHandler() *UploadHandler {
-	return &UploadHandler{}
+func NewUploadHandler(config *models.Config, controller *controller.Controller) *UploadHandler {
+	return &UploadHandler{config: config, controller: controller}
 }
