@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi/models"
+	"github.com/gorilla/mux"
 	"net/http"
 )
 
@@ -12,16 +15,23 @@ type StatusHandler struct {
 func (rcv *StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("status handler")
 
-	response := `{
-	  "status": [
-		{
-		  "uuid": "f4c8de96-4e03-4772-b83c-f8dfbe64e998",
-		  "status": "downloading",
-		  "progress": 31.5
-		}
-	  ]
-	}`
-	if _, err := fmt.Fprintf(w, response); err != nil {
+	vars := mux.Vars(r)
+	uuid := vars["uuid"]
+
+	// TODO: get real data
+	response := &models.StatusResponse{
+		Status: models.Status{
+			Uuid:     uuid,
+			Status:   "complete",
+			Progress: 100.0,
+		},
+	}
+
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if _, err := fmt.Fprintf(w, string(jsonResponse)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

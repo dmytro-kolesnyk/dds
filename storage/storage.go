@@ -4,6 +4,12 @@ import (
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
 	"github.com/dmytro-kolesnyk/dds/storage/localstorage"
 	storage "github.com/dmytro-kolesnyk/dds/storage/splitter"
+	"log"
+	"os"
+	"strconv"
+
+	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
+	"github.com/dmytro-kolesnyk/dds/localstorage"
 )
 
 // Storage struct
@@ -27,6 +33,24 @@ func NewStorage(config *models.Config) *Storage {
 		storeLocal: config.Storage.StoreLocal,
 		offset:     config.Storage.Offset,
 	}
+}
+
+// Start method
+func (rcv *Storage) Start() error {
+	port, err := strconv.Atoi(os.Getenv("PORT")) // [FIXME] read from config.yaml
+	if err != nil {
+		return err
+	}
+
+	// [TODO] move this to "Storage" fields
+	cs := communicationServer.NewCommunicationServer(port)
+
+	if err := cs.Start(); err != nil {
+		log.Println("searching for neighbors")
+		return err
+	}
+
+	return nil
 }
 
 // Method used when current node have to distribute file

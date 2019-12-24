@@ -73,7 +73,7 @@ func (rcv *Discovery) Start(nodes chan *node.Node) error {
 			if n.Instance != rcv.Instance {
 				nodes <- &node.Node{
 					Instance: n.Instance,
-					Addr:     n.AddrIPv4[0], // [TODO] [BUG] [FIXME]
+					Addr:     n.AddrIPv4[0], // [FIXME] should select neighbour IP/IPv6 addr in more intelligent way
 					Port:     n.Port,
 				}
 			}
