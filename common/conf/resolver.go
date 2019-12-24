@@ -12,7 +12,7 @@ type Resolver struct {
 // Returns conf object in order: YAML, ENV.
 func (rcv *Resolver) GetConfig() (*models.Config, error) {
 	envConfigReader := readers.NewEnvConfigReader()
-	yamlConfigReader := readers.NewYamlConfigReader("./cmd/daemon/config.yaml")
+	yamlConfigReader := readers.NewYamlConfigReader("config.yaml")
 
 	return merge(yamlConfigReader, envConfigReader)
 }
