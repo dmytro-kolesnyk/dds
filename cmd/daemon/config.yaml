@@ -1,2 +1,6 @@
 cliapi:
   port: 8080
+communication-server:
+  target-port: 3451
+storage:
+  local-storage-path: /var/tmp/dds
