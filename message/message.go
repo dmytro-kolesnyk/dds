@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"net"
 	"strings"
-	"time"
 )
 
 const (
@@ -118,9 +117,10 @@ func Send(msg Message, conn net.Conn) error {
 }
 
 func Recv(conn net.Conn) (Message, error) {
-	if err := conn.SetReadDeadline(time.Now().Add(1 * time.Nanosecond)); err != nil {
-		return nil, err
-	}
+	// [TODO] move timeouts
+	//if err := conn.SetReadDeadline(time.Now().Add(1 * time.Nanosecond)); err != nil {
+	//	return nil, err
+	//}
 
 	r := bufio.NewReader(conn)
 	msgType, err := r.ReadString(msgTyDelim)
