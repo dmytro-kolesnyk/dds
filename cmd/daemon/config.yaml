@@ -4,3 +4,6 @@ communication-server:
   target-port: 3451
 storage:
   local-storage-path: /var/tmp/dds
+
+loggerina:
+  loglevel: 1

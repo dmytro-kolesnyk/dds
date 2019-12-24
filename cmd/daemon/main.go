@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/dmytro-kolesnyk/dds/common/conf"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/dmytro-kolesnyk/dds/common/conf"
 
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/app"
 	"github.com/dmytro-kolesnyk/dds/common/logger"

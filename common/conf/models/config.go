@@ -14,4 +14,8 @@ type Config struct {
 	CommunicationServer struct {
 		Port int `yaml:"target-port"`
 	} `yaml:"communication-server"`
+
+	Loggerina struct {
+		Loglevel int `yaml:"loglevel",envconfig:"LOGGER_LOGLEVEL"`
+	} `yaml:"loggerina"`
 }
