@@ -7,6 +7,7 @@ import (
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
 	"github.com/dmytro-kolesnyk/dds/storage/fileio"
 	"github.com/dmytro-kolesnyk/dds/storage/splitter"
+	"log"
 )
 
 // LocalStorage contains actual data
@@ -24,6 +25,7 @@ func NewLocalStorage(config *models.Config) *LocalStorage {
 
 // Save method
 func (rcv LocalStorage) Save(chunk storage.Chunk) {
+	log.Printf("Save chunk of the file %s with id %d and date %s, maxId = %d", chunk.FileName, chunk.Id, chunk.Date, chunk.MaxId)
 	b := bytes.Buffer{}
 	encoder := gob.NewEncoder(&b)
 	err := encoder.Encode(chunk)

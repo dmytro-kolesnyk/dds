@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
+	"log"
 	"time"
 )
 
@@ -9,8 +11,10 @@ type Splitter struct {
 	defaultStrategy string
 }
 
-func NewSplitter() *Splitter {
-	return &Splitter{}
+func NewSplitter(config *models.Config) *Splitter {
+	return &Splitter{
+		defaultStrategy: config.Storage.DefaultStrategy,
+	}
 }
 
 type Chunk struct {
@@ -35,6 +39,7 @@ func NewChunk(uuid string, id int, maxId int, fileName string, data []byte, date
 
 //We assume that all chunks have same size
 func (rcv *Splitter) Split(data []byte, fileName string, strategy string, offset int) []Chunk {
+	log.Printf("Split file %s with strategy %s and offset %d", fileName, strategy, offset)
 	// TODO use strategy and offset
 	time := time.Now()
 	maxId := 3

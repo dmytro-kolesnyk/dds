@@ -2,6 +2,7 @@ package communicationServer
 
 import (
 	"fmt"
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
 	"log"
 	"sync"
 	"time"
@@ -42,7 +43,8 @@ type CommunicationServer struct {
 	port int
 }
 
-func NewCommunicationServer(port int) *CommunicationServer {
+func NewCommunicationServer(config *models.Config) *CommunicationServer {
+	port := config.CommunicationServer.Port
 	return &CommunicationServer{
 		listener.NewListener(),
 		discovery.NewDiscovery(

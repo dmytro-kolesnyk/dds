@@ -2,25 +2,19 @@ package storage
 
 import (
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
+	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
 	"github.com/dmytro-kolesnyk/dds/storage/localstorage"
 	storage "github.com/dmytro-kolesnyk/dds/storage/splitter"
 	"log"
-	"os"
-	"strconv"
-
-	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
-	"github.com/dmytro-kolesnyk/dds/localstorage"
 )
 
 // Storage struct
 type Storage struct {
 	splitter *storage.Splitter
-	// Communication_Server
-	// AllNodes []  // Probably need to be updated (health check)
-	// All nodes (external and itself) represented by this struct.
-	// It mb difficult to create same logic when we including current node, which will be used when storeLocal flag is true
+	// AllNodes []  // Probably need to be updatable (health check)
 	offset       int
 	lStorage     *localstorage.LocalStorage
+	cServer      *communicationServer.CommunicationServer
 	lStoragePath string
 	storeLocal   bool
 }
@@ -29,7 +23,8 @@ type Storage struct {
 func NewStorage(config *models.Config) *Storage {
 	return &Storage{
 		lStorage:   localstorage.NewLocalStorage(config),
-		splitter:   storage.NewSplitter(),
+		splitter:   storage.NewSplitter(config),
+		cServer:    communicationServer.NewCommunicationServer(config),
 		storeLocal: config.Storage.StoreLocal,
 		offset:     config.Storage.Offset,
 	}
@@ -37,15 +32,7 @@ func NewStorage(config *models.Config) *Storage {
 
 // Start method
 func (rcv *Storage) Start() error {
-	port, err := strconv.Atoi(os.Getenv("PORT")) // [FIXME] read from config.yaml
-	if err != nil {
-		return err
-	}
-
-	// [TODO] move this to "Storage" fields
-	cs := communicationServer.NewCommunicationServer(port)
-
-	if err := cs.Start(); err != nil {
+	if err := rcv.cServer.Start(); err != nil {
 		log.Println("searching for neighbors")
 		return err
 	}
@@ -55,12 +42,13 @@ func (rcv *Storage) Start() error {
 
 // Method used when current node have to distribute file
 func (rcv *Storage) Save(data []byte, filename string, strategy string, offset int) {
+	log.Printf("Save file %s with strategy %s and offset %d", filename, strategy, offset)
 	chunks := rcv.splitter.Split(data, filename, strategy, offset)
 
 	for _, c := range chunks {
 		rcv.saveChunk(c)
 	}
-	//TODO add logic
+	//TODO add logic to handle table
 }
 
 // Method used when other nodes send their data to distribute

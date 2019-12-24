@@ -11,4 +11,7 @@ type Config struct {
 		StoreLocal       bool   `yaml:"store-local"`
 		Offset           int    `yaml:"offset"`
 	} `yaml:"storage"`
+	CommunicationServer struct {
+		Port int `yaml:"node-port"`
+	}
 }
