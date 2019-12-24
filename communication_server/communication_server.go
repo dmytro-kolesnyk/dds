@@ -15,31 +15,44 @@ import (
 	"github.com/dmytro-kolesnyk/dds/message"
 )
 
-func handleCreate(msg message.Message) {
-	data := msg.(*message.Create)
-	log.Printf("%#v\n", data)
+func handleCreate(req message.Message) message.Message {
+	//data := msg.(*message.Create)
+	//log.Printf("%#v\n", data)
+	return nil
 }
 
-func handleRead(msg message.Message) {
-	data := msg.(*message.Read)
-	log.Printf("%#v\n", data)
+func handleRead(req message.Message) message.Message {
+	//data := msg.(*message.Read)
+	//log.Printf("%#v\n", data)
+	return nil
 }
 
-func handleUpdate(msg message.Message) {
-	data := msg.(*message.Update)
-	log.Printf("%#v\n", data)
+func handleUpdate(req message.Message) message.Message {
+	//data := msg.(*message.Update)
+	//log.Printf("%#v\n", data)
+	return nil
 }
 
-func handleDelete(msg message.Message) {
-	data := msg.(*message.Delete)
-	log.Printf("%#v\n", data)
+func handleDelete(req message.Message) message.Message {
+	//data := msg.(*message.Delete)
+	//log.Printf("%#v\n", data)
+	return nil
+}
+
+func handlePing(req message.Message) message.Message {
+	ping := req.(*message.Ping)
+	time.Sleep(5 * time.Nanosecond)
+	log.Printf("pong (xid: %d) for ping (xid: %d)\n", ping.Xid+1, ping.Xid)
+	return &message.Pong{
+		Xid: ping.Xid + 1,
+	}
 }
 
 type CommunicationServer struct {
 	listener   *listener.Listener
 	discoverer *discovery.Discovery
-	*neighbours
-	port int
+	nodes      sync.Map
+	port       int
 }
 
 func NewCommunicationServer(port int) *CommunicationServer {
@@ -51,43 +64,53 @@ func NewCommunicationServer(port int) *CommunicationServer {
 			"local.",
 			port,
 		),
-		&neighbours{make(map[string]*node.Node), sync.Mutex{}},
+		sync.Map{},
 		port,
 	}
 }
 
 func (rcv *CommunicationServer) Start() error {
 	neighbours := make(chan *node.Node)
+	dead := make(chan string)
+
+	log.Println("looking for neighbours")
 	if err := rcv.discoverer.Start(neighbours); err != nil {
 		return err
 	}
 
-	log.Println("looking for neighbours")
-	go func() {
-		for n := range neighbours {
-			rcv.mux.Lock()
-			if _, ok := rcv.nodes[n.Instance]; !ok {
-				rcv.nodes[n.Instance] = n
-			}
-			rcv.mux.Unlock()
-			if err := rcv.neighbours.Connect(n.Instance); err != nil {
-				log.Println(err)
-			}
-			log.Printf("new neighbour: %#+v\n", n)
-		}
-		log.Println("DISCOVERY STOPPED")
-	}()
-
-	// [TODO] Mock goroutine
 	go func() {
 		for {
-			for _, n := range rcv.nodes {
-				log.Println("neighbour:", n.Instance, n.Addr, n.Port)
-				if err := n.Talk(); err != nil {
-					log.Println(err)
-				}
+			select {
+			case n := <-neighbours:
+				rcv.nodes.Store(n.Instance, n)
+			case instance := <-dead:
+				rcv.nodes.Delete(instance)
+				log.Printf("neighbour %s removed\n", instance)
 			}
-			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	go func() {
+		for {
+			rcv.nodes.Range(func(key, value interface{}) bool {
+				go func() {
+					if value.(*node.Node).Conn != nil {
+						return
+					}
+					log.Println("talking with", key)
+					if err := value.(*node.Node).Connect(); err != nil {
+						log.Println(key, err)
+						dead <- key.(string)
+						return
+					}
+					if err := value.(*node.Node).Talk(); err != nil {
+						log.Println(key, err)
+						dead <- key.(string)
+					}
+				}()
+				return true
+			})
+			time.Sleep(1 * time.Second) // [BUG] sync issues
 		}
 	}()
 
@@ -95,8 +118,9 @@ func (rcv *CommunicationServer) Start() error {
 	rcv.listener.AddHandler(&message.Read{}, handleRead)
 	rcv.listener.AddHandler(&message.Update{}, handleUpdate)
 	rcv.listener.AddHandler(&message.Delete{}, handleDelete)
+	rcv.listener.AddHandler(&message.Ping{}, handlePing)
 
-	if err := rcv.listener.Listen(fmt.Sprintf(":%d", rcv.port)); err != nil {
+	if err := rcv.listener.Start(fmt.Sprintf(":%d", rcv.port)); err != nil {
 		return err
 	}
 
@@ -104,15 +128,10 @@ func (rcv *CommunicationServer) Start() error {
 }
 
 func (rcv *CommunicationServer) Stop() error {
-	return nil
-}
+	rcv.discoverer.Stop()
 
-/*
-func (rcv *CommunicationServer) startClient(addr string, port string) error {
-	rcv.client = &client{}
-	if err := rcv.Talk(addr, port); err != nil {
+	if err := rcv.listener.Stop(); err != nil {
 		return err
 	}
 	return nil
 }
-*/
