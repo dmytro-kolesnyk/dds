@@ -3,6 +3,7 @@ package discovery
 import (
 	"context"
 
+	"github.com/dmytro-kolesnyk/dds/common/logger"
 	"github.com/dmytro-kolesnyk/dds/node"
 	"github.com/grandcat/zeroconf"
 )
@@ -12,6 +13,7 @@ type Discovery struct {
 	service        string
 	domain         string
 	port           int
+	logger         *logger.Logger
 	server         *zeroconf.Server
 	resolver       *zeroconf.Resolver
 	resolverCtx    context.Context
@@ -24,6 +26,7 @@ func NewDiscovery(instance, service, domain string, port int) *Discovery {
 		service:  service,
 		domain:   domain,
 		port:     port,
+		logger:   logger.NewLogger(&Discovery{}),
 	}
 }
 
@@ -76,6 +79,11 @@ func (rcv *Discovery) Start(nodes chan *node.Node) error {
 					Addr:     n.AddrIPv4[0], // [FIXME] should select neighbour IP/IPv6 addr in more intelligent way
 					Port:     n.Port,
 				}
+				rcv.logger.Info(
+					"new neighbour found: instance=", n.Instance,
+					"addr=", n.AddrIPv4[0],
+					"port=", n.Port,
+				)
 			}
 		}
 	}()
