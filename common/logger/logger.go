@@ -17,7 +17,7 @@ func NewMainLogger() *Logger {
 func NewLogger(owner interface{}) *Logger {
 	logger := Logger{getTypeName(owner)}
 
-	log.SetLevel(log.InfoLevel) //TODO update to read from config.yaml
+	log.SetLevel(log.InfoLevel) //TODO update to read from conf.yaml
 
 	return &logger
 }

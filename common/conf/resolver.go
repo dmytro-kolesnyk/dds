@@ -1,15 +1,15 @@
 package conf
 
 import (
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/readers"
+	"github.com/dmytro-kolesnyk/dds/common/conf/models"
+	"github.com/dmytro-kolesnyk/dds/common/conf/readers"
 	"github.com/imdario/mergo"
 )
 
 type Resolver struct {
 }
 
-// Returns config object in order: YAML, ENV.
+// Returns conf object in order: YAML, ENV.
 func (rcv *Resolver) GetConfig() (*models.Config, error) {
 	envConfigReader := readers.NewEnvConfigReader()
 	yamlConfigReader := readers.NewYamlConfigReader("config.yaml")
