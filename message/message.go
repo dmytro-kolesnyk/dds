@@ -12,6 +12,8 @@ const (
 	ReadTy     = "read"
 	UpdateTy   = "update"
 	DeleteTy   = "delete"
+	pingTy     = "ping"
+	pongTy     = "pong"
 	msgTyDelim = '\n'
 )
 
@@ -29,9 +31,31 @@ func NewMessage(ty string) Message {
 		return &Update{}
 	case DeleteTy:
 		return &Delete{}
+	case pingTy:
+		return &Ping{}
+	case pongTy:
+		return &Pong{}
 	}
 
 	return nil
+}
+
+// Ping Message
+type Ping struct {
+	Xid uint32
+}
+
+func (rcv *Ping) Type() string {
+	return pingTy
+}
+
+// Pong Message
+type Pong struct {
+	Xid uint32
+}
+
+func (rcv *Pong) Type() string {
+	return pongTy
 }
 
 // Create Message
@@ -93,6 +117,11 @@ func Send(msg Message, conn net.Conn) error {
 }
 
 func Recv(conn net.Conn) (Message, error) {
+	// [TODO] move timeouts
+	//if err := conn.SetReadDeadline(time.Now().Add(1 * time.Nanosecond)); err != nil {
+	//	return nil, err
+	//}
+
 	r := bufio.NewReader(conn)
 	msgType, err := r.ReadString(msgTyDelim)
 	msgType = strings.Trim(msgType, string(msgTyDelim))
