@@ -1,7 +1,7 @@
 package readers
 
 import (
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
+	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 	"github.com/kelseyhightower/envconfig"
 )
 

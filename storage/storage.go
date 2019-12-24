@@ -23,7 +23,7 @@ func NewStorage() *Storage {
 
 // Start method
 func (rcv *Storage) Start() error {
-	port, err := strconv.Atoi(os.Getenv("PORT")) // [FIXME] read from config.yaml
+	port, err := strconv.Atoi(os.Getenv("PORT")) // [FIXME] read from conf.yaml
 	if err != nil {
 		return err
 	}

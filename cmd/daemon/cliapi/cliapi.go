@@ -3,7 +3,7 @@ package cliapi
 import (
 	"fmt"
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi/handlers"
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
+	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
