@@ -2,7 +2,7 @@ package communicationServer
 
 import (
 	"fmt"
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
+	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 	"log"
 	"sync"
 	"time"

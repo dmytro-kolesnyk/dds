@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf"
+	"github.com/dmytro-kolesnyk/dds/common/conf"
 	"log"
 	"os"
 	"os/signal"

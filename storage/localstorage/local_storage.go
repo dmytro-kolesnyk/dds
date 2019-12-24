@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
+	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 	"github.com/dmytro-kolesnyk/dds/storage/fileio"
 	"github.com/dmytro-kolesnyk/dds/storage/splitter"
 	"log"

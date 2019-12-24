@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/dmytro-kolesnyk/dds/cmd/daemon/conf/models"
+	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
 	"github.com/dmytro-kolesnyk/dds/storage/localstorage"
 	storage "github.com/dmytro-kolesnyk/dds/storage/splitter"
