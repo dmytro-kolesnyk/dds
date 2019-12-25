@@ -7,22 +7,21 @@ import (
 
 type App struct {
 	host string
-	port string
+	port int
 }
 
-func NewApp(host, port string) *App {
+func NewApp(host string, port int) *App {
 	return &App{host, port}
 }
 
-func (a *App) Start(){
+func (rcv *App) Start() {
 
-	restClient := controller.NewController(a.host, a.port)
+	restClient := controller.NewController(rcv.host, rcv.port)
 
 	command_line.Init(restClient)
 
 }
 
-func (a *App) Stop() error {
+func (rcv *App) Stop() error {
 	return nil
 }
-

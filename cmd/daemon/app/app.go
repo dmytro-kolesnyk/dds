@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/dmytro-kolesnyk/dds/cmd/daemon/cliapi"
+	"github.com/dmytro-kolesnyk/dds/cmd/daemon/controller"
 	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 	"github.com/dmytro-kolesnyk/dds/common/logger"
 	"github.com/dmytro-kolesnyk/dds/storage"
@@ -19,10 +20,11 @@ type Daemon struct {
 }
 
 func NewDaemon(config *models.Config) App {
+	store := storage.NewStorage(config)
 	return &Daemon{
 		logger:  logger.NewLogger(Daemon{}),
-		storage: storage.NewStorage(config),
-		cliApi:  cliapi.NewCliApi(config),
+		storage: store,
+		cliApi:  cliapi.NewCliApi(config, controller.NewController(store)),
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 const HttpPrompt string = "http://"
@@ -16,9 +17,9 @@ type Controller struct {
 	client  *http.Client
 }
 
-func NewController(host, port string) *Controller {
+func NewController(host string, port int) *Controller {
 	return &Controller{
-		BaseUrl: HttpPrompt + host + ":" + port,
+		BaseUrl: HttpPrompt + host + ":" + strconv.Itoa(port),
 		client:  &http.Client{},
 	}
 }
@@ -47,7 +48,7 @@ func (s *Controller) ListCmdHandler(route string) (*ListResp, error) {
 		response    = &ListResp{}
 		err         error
 	)
-	req, err := http.NewRequest("GET", s.BaseUrl + BaseRoute + route, nil)
+	req, err := http.NewRequest("GET", s.BaseUrl+BaseRoute+route, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for List command, %s\n", err)
 	}
@@ -72,7 +73,7 @@ func (s *Controller) DownloadCmdHandler(route string) (*DownloadResp, error) {
 		response    = &DownloadResp{}
 		err         error
 	)
-	req, err := http.NewRequest("GET", s.BaseUrl + BaseRoute + route, nil)
+	req, err := http.NewRequest("GET", s.BaseUrl+BaseRoute+route, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for Download command, %s\n", err)
 	}
@@ -97,7 +98,7 @@ func (s *Controller) DeleteCmdHandler(route string) (*DeleteResp, error) {
 		response    = &DeleteResp{}
 		err         error
 	)
-	req, err := http.NewRequest("DELETE", s.BaseUrl + BaseRoute + route, nil)
+	req, err := http.NewRequest("DELETE", s.BaseUrl+BaseRoute+route, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for Delete command, %s\n", err)
 	}
@@ -126,7 +127,7 @@ func (s *Controller) UploadCmdHandler(upload *UploadReq, route string) (*UploadR
 	if err != nil {
 		return nil, fmt.Errorf("failed to create json payload for Upload command, %s\n", err)
 	}
-	req, err := http.NewRequest("POST", s.BaseUrl + BaseRoute + route, bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest("POST", s.BaseUrl+BaseRoute+route, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for Upload command, %s\n", err)
 	}
