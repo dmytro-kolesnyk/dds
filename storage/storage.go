@@ -1,11 +1,12 @@
 package storage
 
 import (
+	"log"
+
 	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
 	"github.com/dmytro-kolesnyk/dds/storage/localstorage"
 	storage "github.com/dmytro-kolesnyk/dds/storage/splitter"
-	"log"
 )
 
 // Storage struct
@@ -32,7 +33,6 @@ func NewStorage(config *models.Config) *Storage {
 // Start method
 func (rcv *Storage) Start() error {
 	if err := rcv.cServer.Start(); err != nil {
-		log.Println("searching for neighbors")
 		return err
 	}
 
@@ -53,4 +53,11 @@ func (rcv *Storage) Save(data []byte, filename string, strategy string, offset i
 // Method used when other nodes send their data to distribute
 func (rcv *Storage) saveChunk(chunk storage.Chunk) {
 	rcv.lStorage.Save(chunk)
+}
+
+func (rcv *Storage) Stop() error {
+	if err := rcv.cServer.Stop(); err != nil {
+		return err
+	}
+	return nil
 }

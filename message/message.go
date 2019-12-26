@@ -3,15 +3,16 @@ package message
 import (
 	"bufio"
 	"encoding/gob"
+	"fmt"
 	"net"
 	"strings"
 )
 
 const (
-	CreateTy   = "create"
-	ReadTy     = "read"
-	UpdateTy   = "update"
-	DeleteTy   = "delete"
+	createTy   = "create"
+	readTy     = "read"
+	updateTy   = "update"
+	deleteTy   = "delete"
 	pingTy     = "ping"
 	pongTy     = "pong"
 	msgTyDelim = '\n'
@@ -23,13 +24,13 @@ type Message interface {
 
 func NewMessage(ty string) Message {
 	switch ty {
-	case CreateTy:
+	case createTy:
 		return &Create{}
-	case ReadTy:
+	case readTy:
 		return &Read{}
-	case UpdateTy:
+	case updateTy:
 		return &Update{}
-	case DeleteTy:
+	case deleteTy:
 		return &Delete{}
 	case pingTy:
 		return &Ping{}
@@ -60,41 +61,45 @@ func (rcv *Pong) Type() string {
 
 // Create Message
 type Create struct {
+	Xid   uint64
 	Id    uint64
 	Bytes []byte
 }
 
 func (rcv *Create) Type() string {
-	return CreateTy
+	return createTy
 }
 
 // Read Message
 type Read struct {
-	Id uint64
+	Xid uint64
+	Id  uint64
 }
 
 func (rcv *Read) Type() string {
-	return ReadTy
+	return readTy
 }
 
 // Update message
 type Update struct {
+	Xid      uint64
 	Filename string
 	Id       uint64
 	Bytes    []byte
 }
 
 func (rcv *Update) Type() string {
-	return UpdateTy
+	return updateTy
 }
 
 // Delete message
 type Delete struct {
+	Xid      uint64
 	Filename string
 }
 
 func (rcv *Delete) Type() string {
-	return DeleteTy
+	return deleteTy
 }
 
 func Send(msg Message, conn net.Conn) error {
@@ -102,15 +107,15 @@ func Send(msg Message, conn net.Conn) error {
 	enc := gob.NewEncoder(w)
 
 	if _, err := w.WriteString(msg.Type() + string(msgTyDelim)); err != nil {
-		return err
+		return fmt.Errorf("send '%s' to %s: %s", msg.Type(), conn.RemoteAddr(), err)
 	}
 
 	if err := enc.Encode(msg); err != nil {
-		return err
+		return fmt.Errorf("send '%s' to %s: %s", msg.Type(), conn.RemoteAddr(), err)
 	}
 
 	if err := w.Flush(); err != nil {
-		return err
+		return fmt.Errorf("send '%s' to %s: %s", msg.Type(), conn.RemoteAddr(), err)
 	}
 
 	return nil
@@ -127,13 +132,12 @@ func Recv(conn net.Conn) (Message, error) {
 	msgType = strings.Trim(msgType, string(msgTyDelim))
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("recv '%s' from %s: %s", msgType, conn.RemoteAddr(), err)
 	}
 
 	msg := NewMessage(msgType)
-
 	if err := gob.NewDecoder(r).Decode(msg); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("recv '%s' from %s: %s", msgType, conn.RemoteAddr(), err)
 	}
 
 	return msg, nil
