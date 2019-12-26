@@ -40,6 +40,9 @@ func (rcv *Daemon) Start() error {
 }
 
 func (rcv *Daemon) Stop() error {
+	if err := rcv.storage.Stop(); err != nil {
+		return err
+	}
 	rcv.logger.Info("Stopped")
 
 	return nil

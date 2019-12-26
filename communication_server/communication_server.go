@@ -2,10 +2,13 @@ package communicationServer
 
 import (
 	"fmt"
-	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/dmytro-kolesnyk/dds/common/logger"
+
+	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 
 	"github.com/dmytro-kolesnyk/dds/listener"
 
@@ -16,37 +19,37 @@ import (
 	"github.com/dmytro-kolesnyk/dds/message"
 )
 
-func handleCreate(req message.Message) message.Message {
+func handleCreate(req message.Message, log *logger.Logger) message.Message {
 	//data := msg.(*message.Create)
 	//log.Printf("%#v\n", data)
 	return nil
 }
 
-func handleRead(req message.Message) message.Message {
+func handleRead(req message.Message, log *logger.Logger) message.Message {
 	//data := msg.(*message.Read)
 	//log.Printf("%#v\n", data)
 	return nil
 }
 
-func handleUpdate(req message.Message) message.Message {
+func handleUpdate(req message.Message, log *logger.Logger) message.Message {
 	//data := msg.(*message.Update)
 	//log.Printf("%#v\n", data)
 	return nil
 }
 
-func handleDelete(req message.Message) message.Message {
+func handleDelete(req message.Message, log *logger.Logger) message.Message {
 	//data := msg.(*message.Delete)
 	//log.Printf("%#v\n", data)
 	return nil
 }
 
-func handlePing(req message.Message) message.Message {
+func handlePing(req message.Message, log *logger.Logger) message.Message {
 	ping := req.(*message.Ping)
-	time.Sleep(5 * time.Nanosecond)
-	log.Printf("pong (xid: %d) for ping (xid: %d)\n", ping.Xid+1, ping.Xid)
-	return &message.Pong{
-		Xid: ping.Xid + 1,
-	}
+	pong := &message.Pong{Xid: ping.Xid + 1}
+
+	log.Debug(fmt.Sprintf("%s(xid=%d) for %s(xid=%d)", ping.Type(), ping.Xid, pong.Type(), pong.Xid))
+
+	return pong
 }
 
 type CommunicationServer struct {
@@ -54,6 +57,7 @@ type CommunicationServer struct {
 	discoverer *discovery.Discovery
 	nodes      sync.Map
 	port       int
+	logger     *logger.Logger
 }
 
 func NewCommunicationServer(config *models.Config) *CommunicationServer {
@@ -68,6 +72,7 @@ func NewCommunicationServer(config *models.Config) *CommunicationServer {
 		),
 		sync.Map{},
 		port,
+		logger.NewLogger(&CommunicationServer{}),
 	}
 }
 
@@ -75,8 +80,8 @@ func (rcv *CommunicationServer) Start() error {
 	neighbours := make(chan *node.Node)
 	dead := make(chan string)
 
-	log.Println("looking for neighbours")
 	if err := rcv.discoverer.Start(neighbours); err != nil {
+		rcv.logger.Error(err)
 		return err
 	}
 
@@ -96,18 +101,18 @@ func (rcv *CommunicationServer) Start() error {
 		for {
 			rcv.nodes.Range(func(key, value interface{}) bool {
 				go func() {
-					if value.(*node.Node).Conn != nil {
+					if value.(*node.Node).Conn != nil && value.(*node.Node).Queue != nil {
 						return
 					}
-					log.Println("talking with", key)
-					if err := value.(*node.Node).Connect(); err != nil {
-						log.Println(key, err)
+					rcv.logger.Info("talking with", value)
+					if err := value.(*node.Node).Start(); err != nil {
+						rcv.logger.Error(key, err)
 						dead <- key.(string)
+						close(value.(*node.Node).Queue)
+						if err := value.(*node.Node).Conn.Close(); err != nil {
+							rcv.logger.Error(key, err)
+						}
 						return
-					}
-					if err := value.(*node.Node).Talk(); err != nil {
-						log.Println(key, err)
-						dead <- key.(string)
 					}
 				}()
 				return true
@@ -122,6 +127,7 @@ func (rcv *CommunicationServer) Start() error {
 	rcv.listener.AddHandler(&message.Delete{}, handleDelete)
 	rcv.listener.AddHandler(&message.Ping{}, handlePing)
 
+	// [TODO] get IP from config.yaml
 	if err := rcv.listener.Start(fmt.Sprintf(":%d", rcv.port)); err != nil {
 		return err
 	}
@@ -130,6 +136,16 @@ func (rcv *CommunicationServer) Start() error {
 }
 
 func (rcv *CommunicationServer) Stop() error {
+	rcv.logger.Info("stopping")
+	rcv.logger.Info("cleaning up neighbours")
+	rcv.nodes.Range(func(key, value interface{}) bool {
+		if err := value.(*node.Node).Conn.Close(); err != nil {
+			rcv.logger.Error(err)
+		}
+		rcv.nodes.Delete(key)
+
+		return true
+	})
 	rcv.discoverer.Stop()
 
 	if err := rcv.listener.Stop(); err != nil {

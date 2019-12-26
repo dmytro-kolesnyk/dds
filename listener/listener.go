@@ -2,24 +2,28 @@ package listener
 
 import (
 	"encoding/gob"
+	"fmt"
 	"log"
 	"net"
 	"sync"
 
+	"github.com/dmytro-kolesnyk/dds/common/logger"
 	"github.com/dmytro-kolesnyk/dds/message"
 )
 
-type HandleFunc func(message.Message) message.Message
+type HandleFunc func(message.Message, *logger.Logger) message.Message
 
 type Listener struct {
 	listener net.Listener
 	handler  map[string]HandleFunc
 	mux      sync.RWMutex
+	logger   *logger.Logger
 }
 
 func NewListener() *Listener {
 	return &Listener{
 		handler: map[string]HandleFunc{},
+		logger:  logger.NewLogger(&Listener{}),
 	}
 }
 
@@ -38,28 +42,28 @@ func (rcv *Listener) Start(port string) error {
 		return err
 	}
 
-	log.Println("listen on", rcv.listener.Addr())
-
+	rcv.logger.Info("listen on", rcv.listener.Addr())
 	for {
 		conn, err := rcv.listener.Accept()
-		log.Println("received connect from", conn.RemoteAddr())
+		rcv.logger.Info("received connect from", conn.RemoteAddr())
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		log.Println("connected from", conn.RemoteAddr())
+		rcv.logger.Info("connected from", conn.RemoteAddr())
 		go rcv.handle(conn)
 	}
 }
 
 func (rcv *Listener) Stop() error {
+	rcv.logger.Info("stopping")
 	return rcv.listener.Close()
 }
 
 func (rcv *Listener) handle(conn net.Conn) {
 	defer func() {
 		if err := conn.Close(); err != nil {
-			log.Println(err)
+			rcv.logger.Error(err)
 		}
 	}()
 
@@ -67,10 +71,8 @@ func (rcv *Listener) handle(conn net.Conn) {
 		request, err := message.Recv(conn)
 
 		if err != nil {
-			log.Printf("%s disconnected, %s\n", conn.RemoteAddr(), err)
-			//if err == io.EOF {
+			rcv.logger.Error(err)
 			return
-			//}
 		}
 
 		rcv.mux.RLock()
@@ -78,15 +80,14 @@ func (rcv *Listener) handle(conn net.Conn) {
 		rcv.mux.RUnlock()
 
 		if !ok {
-			log.Printf("handler for message:'%s' is not registered\n", request.Type())
+			rcv.logger.Warn(fmt.Sprintf("no handler for request '%s'", request.Type()))
 			continue
 		}
 
-		log.Printf("request '%s' from %s received\n", request.Type(), conn.RemoteAddr())
-		response := handler(request)
-		if response != nil {
+		rcv.logger.Info(fmt.Sprintf("request '%s' from %s received", request.Type(), conn.RemoteAddr()))
+		if response := handler(request, rcv.logger); response != nil {
 			if err := message.Send(response, conn); err != nil {
-				log.Println("error during response:", err)
+				rcv.logger.Warn(err)
 			}
 		}
 	}

@@ -2,7 +2,9 @@ package discovery
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/dmytro-kolesnyk/dds/common/logger"
 	"github.com/dmytro-kolesnyk/dds/node"
 	"github.com/grandcat/zeroconf"
 )
@@ -12,6 +14,8 @@ type Discovery struct {
 	service        string
 	domain         string
 	port           int
+	neighbours     chan *zeroconf.ServiceEntry
+	logger         *logger.Logger
 	server         *zeroconf.Server
 	resolver       *zeroconf.Resolver
 	resolverCtx    context.Context
@@ -20,10 +24,12 @@ type Discovery struct {
 
 func NewDiscovery(instance, service, domain string, port int) *Discovery {
 	return &Discovery{
-		Instance: instance,
-		service:  service,
-		domain:   domain,
-		port:     port,
+		Instance:   instance,
+		service:    service,
+		domain:     domain,
+		port:       port,
+		neighbours: make(chan *zeroconf.ServiceEntry),
+		logger:     logger.NewLogger(&Discovery{}),
 	}
 }
 
@@ -34,7 +40,7 @@ func (rcv *Discovery) startServer() (err error) {
 		rcv.domain,
 		rcv.port,
 		nil,
-		nil,
+		nil, // [TODO] get from config.yaml
 	)
 
 	return
@@ -55,6 +61,7 @@ func (rcv *Discovery) browse(neighbours chan *zeroconf.ServiceEntry) error {
 }
 
 func (rcv *Discovery) Start(nodes chan *node.Node) error {
+	rcv.logger.Info("looking for neighbours")
 	if err := rcv.startServer(); err != nil {
 		return err
 	}
@@ -63,19 +70,21 @@ func (rcv *Discovery) Start(nodes chan *node.Node) error {
 		return err
 	}
 
-	neighbours := make(chan *zeroconf.ServiceEntry)
-	if err := rcv.browse(neighbours); err != nil {
+	//neighbours := make(chan *zeroconf.ServiceEntry)
+	if err := rcv.browse(rcv.neighbours); err != nil {
 		return err
 	}
 
 	go func() {
-		for n := range neighbours {
+		for n := range rcv.neighbours {
 			if n.Instance != rcv.Instance {
-				nodes <- &node.Node{
-					Instance: n.Instance,
-					Addr:     n.AddrIPv4[0], // [FIXME] should select neighbour IP/IPv6 addr in more intelligent way
-					Port:     n.Port,
-				}
+				neighbour := node.NewNode(
+					n.Instance,
+					n.AddrIPv4[0], // [FIXME] should select neighbour IP/IPv6 addr in more intelligent way
+					n.Port,
+				)
+				nodes <- neighbour
+				rcv.logger.Info(fmt.Sprintf("new neighbour: %s", neighbour))
 			}
 		}
 	}()
@@ -84,7 +93,10 @@ func (rcv *Discovery) Start(nodes chan *node.Node) error {
 }
 
 func (rcv *Discovery) Stop() {
+	rcv.logger.Info("stopping mDNS server")
 	rcv.server.Shutdown()
+	rcv.logger.Info("stopping mDNS resolver")
 	<-rcv.resolverCtx.Done()
 	rcv.resolverCancel()
+	close(rcv.neighbours)
 }
