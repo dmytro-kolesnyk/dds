@@ -1,18 +1,16 @@
 package storage
 
 import (
-	"log"
-
 	"github.com/dmytro-kolesnyk/dds/common/conf/models"
 	communicationServer "github.com/dmytro-kolesnyk/dds/communication_server"
 	"github.com/dmytro-kolesnyk/dds/storage/localstorage"
 	storage "github.com/dmytro-kolesnyk/dds/storage/splitter"
+	"log"
 )
 
 // Storage struct
 type Storage struct {
 	splitter     *storage.Splitter
-	offset       int
 	lStorage     *localstorage.LocalStorage
 	cServer      *communicationServer.CommunicationServer
 	lStoragePath string
@@ -26,7 +24,6 @@ func NewStorage(config *models.Config) *Storage {
 		splitter:   storage.NewSplitter(config),
 		cServer:    communicationServer.NewCommunicationServer(config),
 		storeLocal: config.Storage.StoreLocal,
-		offset:     config.Storage.Offset,
 	}
 }
 
@@ -35,14 +32,18 @@ func (rcv *Storage) Start() error {
 	if err := rcv.cServer.Start(); err != nil {
 		return err
 	}
-
 	return nil
 }
 
+// This method ONLY for consistency check (will be removed)
+func (rcv *Storage) Read(uuid string, index int) *storage.Chunk {
+	return rcv.lStorage.GetChunk(uuid, index)
+}
+
 // Method used when current node have to distribute file
-func (rcv *Storage) Save(data []byte, filename string, strategy string, offset int) {
-	log.Printf("Save file %s with strategy %s and offset %d", filename, strategy, offset)
-	chunks := rcv.splitter.Split(data, filename, strategy, offset)
+func (rcv *Storage) Save(data []byte, filename string, strategy string) {
+	log.Printf("Save file %s with strategy %s", filename, strategy)
+	chunks := rcv.splitter.Split(data, filename, strategy)
 
 	for _, c := range chunks {
 		rcv.saveChunk(c)

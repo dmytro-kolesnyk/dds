@@ -11,16 +11,43 @@ func check(e error) {
 	}
 }
 
-// Read function
-func Read(file string, offset int, lenght int) []byte {
-	f, err := os.Open(file)
+func Size(filePath string) int64 {
+
+	file, err := os.Open(filePath)
+	defer file.Close()
+
+	if os.IsNotExist(err) {
+		return 0
+	} else {
+		check(err)
+	}
+
+	info, err := file.Stat()
 	check(err)
-	// do stuff
-	f.Close()
-	b := make([]byte, 2)
-	b[0] = 2
-	b[1] = 2
-	return b
+
+	return info.Size()
+}
+
+// Read function
+func Read(filePath string, offset int64, size int) []byte {
+	file, err := os.OpenFile(
+		filePath,
+		os.O_RDONLY,
+		0666,
+	)
+	defer file.Close()
+	check(err)
+
+	buffer := make([]byte, size)
+
+	rBytes, err := file.ReadAt(buffer, offset)
+	check(err)
+
+	if rBytes != size {
+		println("%d != size %d ", rBytes, size)
+	}
+
+	return buffer
 }
 
 // Write function
@@ -31,14 +58,12 @@ func Write(data []byte, path string) int {
 		os.O_WRONLY|os.O_CREATE|os.O_APPEND,
 		0666,
 	)
-	check(err)
 	defer file.Close()
-	// do stuff
+	check(err)
 
 	bytesWritten, err := file.Write(data)
 	check(err)
 
-	//
 	log.Printf("Wrote %d bytes. into path %s\n", bytesWritten, path)
 	return bytesWritten
 }

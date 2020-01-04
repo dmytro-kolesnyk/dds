@@ -28,7 +28,7 @@ type Chunk struct {
 
 func NewChunk(uuid string, id int, maxId int, fileName string, data []byte, date time.Time) *Chunk {
 	return &Chunk{
-		Uuid:     uuid,
+		Uuid:     uuid, // Alias for fileName (collision evasion)
 		Id:       id,
 		MaxId:    maxId,
 		FileName: fileName,
@@ -38,17 +38,17 @@ func NewChunk(uuid string, id int, maxId int, fileName string, data []byte, date
 }
 
 //We assume that all chunks have same size
-func (rcv *Splitter) Split(data []byte, fileName string, strategy string, offset int) []Chunk {
-	log.Printf("Split file %s with strategy %s and offset %d", fileName, strategy, offset)
+func (rcv *Splitter) Split(data []byte, fileName string, strategy string) []Chunk {
+	log.Printf("Split file = %s with strategy = %s", fileName, strategy)
 	// TODO use strategy and offset
-	time := time.Now()
+	createdTime := time.Now()
 	maxId := 3
+	uuid := fileName + "-uuid"
 
 	chunks := make([]Chunk, maxId)
 	// Simple impl
 	for i := 0; i < maxId; i++ {
-		uuid := "rand-" + string(i)
-		chunks[i] = *NewChunk(uuid, i, maxId, fileName, data, time)
+		chunks[i] = *NewChunk(uuid, i, maxId, fileName, data, createdTime)
 	}
 
 	return chunks
