@@ -27,7 +27,7 @@ func (rcv *Controller) Save(filePath string, strategy string, storeLocally bool)
 	}
 
 	// TODO: this should return uuid or error
-	rcv.storage.Save(bytes, filepath.Base(filePath), strategy, -1)
+	rcv.storage.Save(bytes, filepath.Base(filePath), strategy)
 	return "f4c8de96-4e03-4772-b83c-f8dfbe64e998", nil
 }
 
