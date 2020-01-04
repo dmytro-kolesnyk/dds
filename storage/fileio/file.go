@@ -11,16 +11,18 @@ func check(e error) {
 	}
 }
 
-func Size(file string) int64 {
+func Size(filePath string) int64 {
 
-	open, err := os.Open(file)
+	file, err := os.Open(filePath)
+	defer file.Close()
+
 	if os.IsNotExist(err) {
 		return 0
 	} else {
 		check(err)
 	}
 
-	info, err := open.Stat()
+	info, err := file.Stat()
 	check(err)
 
 	return info.Size()
